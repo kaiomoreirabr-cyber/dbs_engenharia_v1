@@ -1,0 +1,17 @@
+{
+  "name": "Controle de Frequência de Obras",
+  "short_name": "Frequência",
+  "description": "Chamada de equipe, obras e fechamento de pagamento.",
+  "start_url": "/chamada",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f7f5",
+  "theme_color": "#d71920",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
