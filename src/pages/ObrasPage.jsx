@@ -1,4 +1,5 @@
-import { Building2 } from "lucide-react";
+import { Building2, Plus } from "lucide-react";
+import { useState } from "react";
 import PageHeader from "../components/PageHeader";
 import ProjectForm from "../components/ProjectForm";
 import ProjectList from "../components/ProjectList";
@@ -9,10 +10,22 @@ import ProjectList from "../components/ProjectList";
 // formulário de cadastro e a lista de obras já cadastradas cada um na sua
 // tela cheia (em vez de dividido) é bem mais fácil de usar.
 export default function ObrasPage() {
+  const [formOpen, setFormOpen] = useState(false);
+
   return (
     <div className="page">
-      <PageHeader icon={Building2} eyebrow="Obras" title="Cadastro de Obras" />
-      <ProjectForm />
+      <PageHeader icon={Building2} eyebrow="Obras" title="Obras" />
+      <div className="project-register-toolbar">
+        <button
+          type="button"
+          className="primary-button register-button"
+          onClick={() => setFormOpen((current) => !current)}
+        >
+          <Plus size={18} aria-hidden="true" />
+          {formOpen ? "Fechar cadastro" : "Cadastrar obra"}
+        </button>
+      </div>
+      {formOpen && <ProjectForm />}
       <ProjectList />
     </div>
   );

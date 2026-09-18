@@ -14,7 +14,11 @@ import {
   DAY_KEYS,
   // ALTERAÇÃO: novas funções de período (semanal/quinzenal), ver dateUtils.js
   getPeriodWeekStarts,
+  getWeekStartsBetween,
+  addWeeks,
   addPeriods,
+  addWorkingDays,
+  normalizePeriodStart,
   normalizeClosingPeriod,
 } from "../lib/dateUtils";
 import { validateProjectName, validateEmployee } from "../lib/validation";
@@ -47,6 +51,8 @@ export function AppProvider({ children }) {
   // 1 semana (semanal) ou 2 semanas (quinzenal) — ver "closingPeriod" e
   // "periodWeekStarts" logo abaixo, derivados a partir deste valor.
   const [periodStart, setPeriodStart] = useState(() => getWeekStart());
+  const [reportStartDate, setReportStartDate] = useState(() => addWeeks(getWeekStart(), -1));
+  const [reportEndDate, setReportEndDate] = useState(() => addWorkingDays(addWeeks(getWeekStart(), -1), 12));
   const [attendance, setAttendance] = useState(new Map());
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [pendingCells, setPendingCells] = useState(new Set());
@@ -78,6 +84,20 @@ export function AppProvider({ children }) {
     () => getPeriodWeekStarts(periodStart, closingPeriod),
     [periodStart, closingPeriod]
   );
+
+  const reportWeekStarts = useMemo(
+    () => getWeekStartsBetween(reportStartDate, reportEndDate).slice(0, 2),
+    [reportStartDate, reportEndDate]
+  );
+
+  useEffect(() => {
+    const normalizedStart = normalizePeriodStart(reportStartDate);
+    const periodEnd = addWorkingDays(normalizedStart, closingPeriod === "semanal" ? 6 : 12);
+    if (reportStartDate !== normalizedStart) setReportStartDate(normalizedStart);
+    if (reportEndDate !== periodEnd) setReportEndDate(periodEnd);
+    // Recalcula o fim apenas quando a obra ou o modo de fechamento muda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeProjectId, closingPeriod]);
 
   // ---------- Carga inicial ----------
   useEffect(() => {
@@ -142,7 +162,11 @@ export function AppProvider({ children }) {
         // ALTERAÇÃO: antes comparava com uma única semana (row.week_start !== weekStart).
         // Agora o período pode ter 2 semanas, então verificamos se a semana da
         // mudança está DENTRO da lista periodWeekStarts do período em tela.
-        if (!row || !periodWeekStarts.includes(row.week_start)) return;
+        if (!row || !reportWeekStarts.includes(row.week_start)) return;
+        const belongsToActiveProject = employees.some(
+          (employee) => employee.id === row.employee_id && employee.project_id === activeProjectId
+        );
+        if (!belongsToActiveProject) return;
         setAttendance((current) => {
           const next = new Map(current);
           // ALTERAÇÃO: attendanceKey agora recebe também row.week_start.
@@ -164,7 +188,7 @@ export function AppProvider({ children }) {
     // (que muda quando o período navega OU quando a obra ativa troca de
     // período de fechamento).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodWeekStarts]);
+  }, [reportWeekStarts, employees, activeProjectId]);
 
   // ---------- Frequência: carregar todas as semanas do período ----------
   useEffect(() => {
@@ -173,10 +197,18 @@ export function AppProvider({ children }) {
     let cancelled = false;
     setAttendanceLoading(true);
 
-    // ALTERAÇÃO: fetchAttendanceForWeek(weekStart) -> fetchAttendanceForWeeks(periodWeekStarts).
+    // ALTERAÇÃO: carrega todas as semanas do intervalo escolhido no relatório.
     // Antes buscava 1 semana; agora busca todas as semanas do período de uma vez
     // (1 semana se semanal, 2 semanas se quinzenal).
-    api.fetchAttendanceForWeeks(periodWeekStarts).then(({ data, error }) => {
+    const employeeIds = employees
+      .filter((employee) => employee.project_id === activeProjectId)
+      .map((employee) => employee.id);
+    if (!activeProjectId || !employeeIds.length) {
+      setAttendance(new Map());
+      setAttendanceLoading(false);
+      return undefined;
+    }
+    api.fetchAttendanceForWeeks(reportWeekStarts, employeeIds).then(({ data, error }) => {
       if (cancelled) return;
       if (error) {
         showError("Não foi possível carregar a chamada deste período.");
@@ -196,7 +228,7 @@ export function AppProvider({ children }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodWeekStarts]);
+  }, [reportWeekStarts, employees, activeProjectId]);
 
   // ---------- Obras ----------
   // ALTERAÇÃO: addProject agora recebe também "closingPeriod" (semanal ou
@@ -290,7 +322,7 @@ export function AppProvider({ children }) {
       setEmployees((current) => upsertById(current, data));
       setActiveProjectId(payload.projectId);
       showSuccess(`Funcionário "${data.name}" cadastrado com sucesso.`);
-      return { ok: true };
+      return { ok: true, employee: data };
     },
     [employees, showError, showSuccess]
   );
@@ -385,13 +417,34 @@ export function AppProvider({ children }) {
   );
   const goToCurrentPeriod = useCallback(() => setPeriodStart(getWeekStart()), []);
 
+  const setReportDateRange = useCallback((startDate, endDate) => {
+    setReportStartDate(normalizePeriodStart(startDate));
+    setReportEndDate(endDate);
+  }, []);
+
+  const shiftReportRange = useCallback(
+    (direction) => {
+      const nextStart = closingPeriod === "semanal"
+        ? addWeeks(reportStartDate, direction)
+        : addWeeks(reportStartDate, direction * 2);
+      const nextEnd = closingPeriod === "semanal"
+        ? addWorkingDays(nextStart, 6)
+        : addWorkingDays(nextStart, 12);
+      setReportStartDate(nextStart);
+      setReportEndDate(nextEnd);
+    },
+    [reportStartDate, closingPeriod]
+  );
+
   // ---------- Derivados ----------
   // ALTERAÇÃO: "activeProject" foi movido para cima (perto do topo do
   // componente) — ver comentário lá. Removida a definição duplicada que
   // existia aqui.
 
   const activeEmployees = useMemo(
-    () => employees.filter((employee) => employee.project_id === activeProjectId),
+    () => employees
+      .filter((employee) => employee.project_id === activeProjectId)
+      .sort((left, right) => left.name.localeCompare(right.name, "pt-BR", { sensitivity: "base" })),
     [employees, activeProjectId]
   );
 
@@ -413,7 +466,7 @@ export function AppProvider({ children }) {
   const summary = useMemo(() => {
     const counts = { full: 0, half: 0, absent: 0 };
     activeEmployees.forEach((employee) => {
-      periodWeekStarts.forEach((weekStart) => {
+      reportWeekStarts.forEach((weekStart) => {
         DAY_KEYS.forEach((day) => {
           const status = getAttendanceStatus(employee.id, weekStart, day);
           counts[status] += 1;
@@ -421,7 +474,26 @@ export function AppProvider({ children }) {
       });
     });
     return counts;
-  }, [activeEmployees, periodWeekStarts, getAttendanceStatus]);
+  }, [activeEmployees, reportWeekStarts, getAttendanceStatus]);
+
+  const firstFilledDay = useMemo(() => {
+    const firstWeekStart = reportWeekStarts[0];
+    if (!firstWeekStart) return null;
+
+    const filledDays = reportWeekStarts.flatMap((weekStart, weekIndex) =>
+      DAY_KEYS.flatMap((day) => {
+        const filled = activeEmployees.some((employee) => {
+          const status = getAttendanceStatus(employee.id, weekStart, day);
+          return status === "full" || status === "half";
+        });
+        return filled ? [{ weekIndex, day }] : [];
+      })
+    );
+
+    const firstWeekday = filledDays.find(({ day }) => day !== "sab") || null;
+    const saturday = filledDays.find(({ day }) => day === "sab") || null;
+    return { start: firstWeekday, end: saturday };
+  }, [activeEmployees, reportWeekStarts, getAttendanceStatus]);
 
   // ALTERAÇÃO: buildReport agora soma os dias de TODAS as semanas do período
   // (periodWeekStarts), não só de uma semana fixa. No modo quinzenal, o
@@ -459,7 +531,12 @@ export function AppProvider({ children }) {
     // ALTERAÇÃO: expõe os novos nomes/conceitos de período no lugar de
     // "weekStart" + goToPreviousWeek/goToNextWeek/goToCurrentWeek.
     periodStart,
+    reportStartDate,
+    reportEndDate,
+    setReportDateRange,
+      shiftReportRange,
     periodWeekStarts,
+    reportWeekStarts,
     closingPeriod,
     attendanceLoading,
     goToPreviousPeriod,
@@ -476,6 +553,7 @@ export function AppProvider({ children }) {
     toggleAttendance,
     getAttendanceStatus,
     isCellPending,
+    firstFilledDay,
     summary,
     buildReport,
     reportVisible,

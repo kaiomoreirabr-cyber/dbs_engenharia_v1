@@ -103,8 +103,16 @@ export function deleteEmployee(id) {
 // de fechamento pode ter 1 semana (semanal) ou 2 semanas (quinzenal), então a
 // função passa a receber uma LISTA de "week_start" e usa .in(...) para buscar
 // todas de uma vez. Quem chama passa periodWeekStarts (ver AppContext.jsx).
-export function fetchAttendanceForWeeks(weekStarts) {
-  return run(supabase.from("attendance_records").select("*").in("week_start", weekStarts));
+export function fetchAttendanceForWeeks(weekStarts, employeeIds = []) {
+  let query = supabase.from("attendance_records").select("*").in("week_start", weekStarts);
+  if (employeeIds.length) query = query.in("employee_id", employeeIds);
+  return run(query);
+}
+
+export function fetchAttendanceForReport(weekStarts, employeeIds = []) {
+  let query = supabase.from("attendance_records").select("*").in("week_start", weekStarts);
+  if (employeeIds.length) query = query.in("employee_id", employeeIds);
+  return run(query);
 }
 
 /** Grava (ou atualiza) a marcação de um dia. Usa upsert para evitar corrida de estados. */

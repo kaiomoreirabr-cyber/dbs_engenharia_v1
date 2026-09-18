@@ -1,20 +1,35 @@
-import { useEffect, useState } from "react";
-import { CalendarCheck, ChevronLeft, ChevronRight, HardHat } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, HardHat } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { useToast } from "../context/ToastContext";
 import PageHeader from "../components/PageHeader";
 import ProjectSelect from "../components/ProjectSelect";
 import {
   DAY_KEYS,
   DAY_LABELS,
-  formatWeekRange,
-  formatPeriodRange,
-  isCurrentPeriod,
+  getWeekEnd,
+  getWeekStart,
   getTodayDayKey,
+  addWorkingDays,
+  getPeriodEnd,
+  addWeeks,
+  isMonday,
 } from "../lib/dateUtils";
 import { formatCurrency, getInitials } from "../lib/format";
 
 const STATUS_LABEL = { absent: "ausente", full: "diária completa", half: "meia diária" };
+
+function formatReportWeekRange(weekStart, reportStartDate, reportEndDate) {
+  const start = weekStart < reportStartDate ? reportStartDate : weekStart;
+  const weekEnd = getWeekEnd(weekStart);
+  const end = weekEnd > reportEndDate ? reportEndDate : weekEnd;
+  const format = (isoDate) => {
+    const [, month, day] = isoDate.split("-");
+    return `${day}/${month}`;
+  };
+  return `${format(start)} a ${format(end)}`;
+}
 
 // ALTERAÇÃO: arquivo novo — substitui AttendanceTable.jsx (que era uma
 // tabela larga com 6 ou 12 colunas de dia lado a lado). No celular, uma
@@ -29,14 +44,16 @@ export default function ChamadaPage() {
     getAttendanceStatus,
     isCellPending,
     toggleAttendance,
-    periodStart,
-    periodWeekStarts,
+    firstFilledDay,
+    reportWeekStarts,
     closingPeriod,
-    goToPreviousPeriod,
-    goToNextPeriod,
-    goToCurrentPeriod,
     summary,
+    reportStartDate,
+    reportEndDate,
+    setReportDateRange,
+    shiftReportRange,
   } = useApp();
+  const { showError } = useToast();
 
   // Qual semana DENTRO do período está sendo mostrada (0 = primeira). Só
   // importa no modo quinzenal, que tem 2 semanas; no semanal é sempre 0.
@@ -47,12 +64,41 @@ export default function ChamadaPage() {
   // Se o período mudar (navegou, ou a obra trocou de quinzenal->semanal) e
   // o índice de semana escolhido não existir mais, volta pra semana 1.
   useEffect(() => {
-    setWeekIndex((current) => (current > periodWeekStarts.length - 1 ? 0 : current));
-  }, [periodWeekStarts]);
+    setWeekIndex((current) => (current > reportWeekStarts.length - 1 ? 0 : current));
+  }, [reportWeekStarts]);
 
-  const currentWeekStart = periodWeekStarts[weekIndex] || periodWeekStarts[0];
+  const currentWeekStart = reportWeekStarts[weekIndex] || reportWeekStarts[0];
   const periodLabel = closingPeriod === "quinzenal" ? "Quinzena" : "Semana";
-  const current = isCurrentPeriod(periodStart, closingPeriod);
+  const currentWeek = getWeekStart();
+  const current = reportStartDate <= currentWeek && currentWeek <= reportEndDate;
+
+  const handleReportStartChange = (event) => {
+    const nextStartDate = event.target.value;
+    if (!isMonday(nextStartDate)) {
+      showError("A chamada só pode começar em uma segunda-feira.");
+      return;
+    }
+    const nextEndDate = closingPeriod === "semanal"
+      ? getPeriodEnd(nextStartDate, closingPeriod)
+      : addWorkingDays(nextStartDate, 12);
+    setReportDateRange(nextStartDate, nextEndDate);
+  };
+
+  const handleReturnToToday = () => {
+    const currentReportStart = addWeeks(getWeekStart(), -1);
+    const currentReportEnd = closingPeriod === "semanal"
+      ? getPeriodEnd(currentReportStart, closingPeriod)
+      : addWorkingDays(currentReportStart, 12);
+    const todayWeekIndex = reportWeekStarts.indexOf(getWeekStart());
+
+    setReportDateRange(currentReportStart, currentReportEnd);
+    setWeekIndex(todayWeekIndex >= 0 ? todayWeekIndex : 0);
+    setDay(getTodayDayKey());
+  };
+
+  const handleAttendanceToggle = (employeeId) => {
+    toggleAttendance(employeeId, currentWeekStart, day);
+  };
 
   return (
     <div className="page">
@@ -84,17 +130,28 @@ export default function ChamadaPage() {
             <button
               type="button"
               className="icon-action"
-              onClick={goToPreviousPeriod}
+              onClick={() => shiftReportRange(-1)}
               aria-label={`${periodLabel} anterior`}
             >
               <ChevronLeft size={16} />
             </button>
             <div className="period-nav-label">
-              <span>
-                {periodLabel} de {formatPeriodRange(periodStart, closingPeriod)}
-              </span>
+              <div className="attendance-report-dates" aria-label="Período usado no relatório">
+                <DateInputField
+                  label="Início"
+                  value={reportStartDate}
+                  onChange={handleReportStartChange}
+                  tone="start"
+                />
+                <span className="attendance-report-dates-separator">até</span>
+                <DateInputField label="Fim" value={reportEndDate} readOnly tone="end" />
+              </div>
               {!current && (
-                <button type="button" className="week-today-link" onClick={goToCurrentPeriod}>
+                <button
+                  type="button"
+                  className="week-today-link"
+                  onClick={handleReturnToToday}
+                >
                   voltar para hoje
                 </button>
               )}
@@ -102,7 +159,7 @@ export default function ChamadaPage() {
             <button
               type="button"
               className="icon-action"
-              onClick={goToNextPeriod}
+              onClick={() => shiftReportRange(1)}
               aria-label={`Próxima ${periodLabel.toLowerCase()}`}
             >
               <ChevronRight size={16} />
@@ -111,9 +168,9 @@ export default function ChamadaPage() {
 
           {/* ALTERAÇÃO: bloco só aparece em obras quinzenais — escolhe qual
               das 2 semanas do período as abas de dia (abaixo) vão mostrar. */}
-          {periodWeekStarts.length > 1 && (
+          {reportWeekStarts.length > 1 && (
             <div className="week-in-period-toggle" role="tablist" aria-label="Semana do período">
-              {periodWeekStarts.map((weekStart, index) => (
+              {reportWeekStarts.map((weekStart, index) => (
                 <button
                   key={weekStart}
                   type="button"
@@ -123,7 +180,7 @@ export default function ChamadaPage() {
                   onClick={() => setWeekIndex(index)}
                 >
                   Semana {index + 1}
-                  <span>{formatWeekRange(weekStart)}</span>
+                  <span>{formatReportWeekRange(weekStart, reportStartDate, reportEndDate)}</span>
                 </button>
               ))}
             </div>
@@ -140,6 +197,18 @@ export default function ChamadaPage() {
                 onClick={() => setDay(dayKey)}
               >
                 {DAY_LABELS[dayKey]}
+                {firstFilledDay.start?.weekIndex === weekIndex && firstFilledDay.start?.day === dayKey && (
+                  <span className="day-tab-start-badge day-tab-start" aria-label="Início da quinzena">
+                    <CalendarCheck size={11} aria-hidden="true" />
+                    INÍCIO
+                  </span>
+                )}
+                {weekIndex === reportWeekStarts.length - 1 && dayKey === "sab" && (
+                    <span className="day-tab-start-badge day-tab-end" aria-label={`Fim da ${periodLabel.toLowerCase()}`}>
+                    <CalendarCheck size={11} aria-hidden="true" />
+                    FIM
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -165,7 +234,7 @@ export default function ChamadaPage() {
                   <button
                     type="button"
                     className={`attendance-button is-${status}${pending ? " is-pending" : ""}`}
-                    onClick={() => toggleAttendance(employee.id, currentWeekStart, day)}
+                    onClick={() => handleAttendanceToggle(employee.id)}
                     disabled={attendanceLoading}
                     aria-label={`${employee.name}, ${DAY_LABELS[day]}: ${STATUS_LABEL[status]}`}
                   >
@@ -183,5 +252,34 @@ export default function ChamadaPage() {
         </>
       )}
     </div>
+  );
+}
+
+function DateInputField({ label, value, onChange, readOnly = false, tone }) {
+  const inputRef = useRef(null);
+
+  return (
+    <label className={`attendance-date-field date-tone-${tone}`}>
+      <span>{label}</span>
+      <input
+        ref={inputRef}
+        type="date"
+        value={value}
+        onChange={onChange}
+        readOnly={readOnly}
+        aria-readonly={readOnly}
+      />
+      {!readOnly && (
+        <button
+          type="button"
+          className="attendance-calendar-button"
+          onClick={() => inputRef.current?.showPicker?.() || inputRef.current?.click()}
+          aria-label={`Escolher ${label.toLowerCase()}`}
+          title="Editar data de início"
+        >
+          <CalendarDays size={15} aria-hidden="true" />
+        </button>
+      )}
+    </label>
   );
 }

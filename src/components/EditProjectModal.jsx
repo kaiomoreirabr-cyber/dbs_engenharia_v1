@@ -23,8 +23,21 @@ export default function EditProjectModal({ project, onClose }) {
   };
 
   return (
-    <Modal title="Editar obra" onClose={onClose}>
-      <form onSubmit={handleSubmit}>
+    <Modal
+      title="Editar obra"
+      onClose={onClose}
+      footer={(
+        <div className="modal-actions">
+          <button type="button" className="secondary-button" onClick={onClose}>
+            Cancelar
+          </button>
+          <button type="submit" form="edit-project-form" className="primary-button register-button" disabled={savingProject}>
+            {savingProject ? "Salvando…" : "Salvar alterações"}
+          </button>
+        </div>
+      )}
+    >
+      <form id="edit-project-form" onSubmit={handleSubmit}>
         <label className="field-label" htmlFor="edit-project-name">
           Nome da obra
         </label>
@@ -63,14 +76,6 @@ export default function EditProjectModal({ project, onClose }) {
           </div>
         </fieldset>
 
-        <div className="modal-actions">
-          <button type="button" className="secondary-button" onClick={onClose}>
-            Cancelar
-          </button>
-          <button type="submit" className="primary-button" disabled={savingProject}>
-            {savingProject ? "Salvando…" : "Salvar alterações"}
-          </button>
-        </div>
       </form>
     </Modal>
   );

@@ -1,29 +1,49 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pencil } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { formatCurrency, getInitials } from "../lib/format";
 import ConfirmButton from "./ConfirmButton";
 import EditEmployeeModal from "./EditEmployeeModal";
 
-export default function EmployeeList() {
-  const { employees, projects, removeEmployee } = useApp();
+export default function EmployeeList({ highlightedEmployeeId }) {
+  const { activeEmployees, projects, activeProjectId, removeEmployee } = useApp();
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const rowRefs = useRef(new Map());
 
   const projectName = (projectId) => projects.find((project) => project.id === projectId)?.name || "—";
+  const projectEmployees = activeEmployees;
+
+  useEffect(() => {
+    if (!highlightedEmployeeId) return undefined;
+    const row = rowRefs.current.get(highlightedEmployeeId);
+    row?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const timer = setTimeout(() => row?.classList.remove("is-newly-added"), 2800);
+    row?.classList.add("is-newly-added");
+    return () => clearTimeout(timer);
+  }, [highlightedEmployeeId]);
 
   return (
     <div>
       <div className="list-header">
         <h2 className="form-title">Equipe cadastrada</h2>
-        <span className="count-badge">{employees.length}</span>
+        <span className="count-badge">{projectEmployees.length}</span>
       </div>
 
-      {employees.length === 0 ? (
-        <p className="empty-box">Nenhum funcionário cadastrado ainda.</p>
+      {!activeProjectId ? (
+        <p className="empty-box">Selecione uma obra para ver os funcionários.</p>
+      ) : projectEmployees.length === 0 ? (
+        <p className="empty-box">Nenhum funcionário cadastrado nesta obra.</p>
       ) : (
         <ul className="entity-list">
-          {employees.map((employee) => (
-            <li key={employee.id} className="entity-row">
+          {projectEmployees.map((employee) => (
+            <li
+              key={employee.id}
+              ref={(element) => {
+                if (element) rowRefs.current.set(employee.id, element);
+                else rowRefs.current.delete(employee.id);
+              }}
+              className="entity-row"
+            >
               <div className="entity-info">
                 <span className="entity-avatar" aria-label={employee.name}>
                   {getInitials(employee.name)}
@@ -39,11 +59,12 @@ export default function EmployeeList() {
                 <strong className="entity-rate">{formatCurrency(employee.daily_rate)}</strong>
                 <button
                   type="button"
-                  className="icon-action"
+                    className="employee-action employee-edit-action"
                   onClick={() => setEditingEmployee(employee)}
                   aria-label={`Editar funcionário ${employee.name}`}
                 >
                   <Pencil size={15} />
+                    Editar
                 </button>
                 <ConfirmButton
                   label="Excluir"

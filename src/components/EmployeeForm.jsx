@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { UserPlus } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
 const EMPTY_FORM = { name: "", role: "", dailyRate: "", projectId: "", pixKey: "" };
 
-export default function EmployeeForm() {
+export default function EmployeeForm({ onCreated }) {
   const { projects, activeProjectId, addEmployee, savingEmployee } = useApp();
   const [form, setForm] = useState(() => ({ ...EMPTY_FORM, projectId: activeProjectId || "" }));
 
@@ -26,6 +27,7 @@ export default function EmployeeForm() {
 
     const result = await addEmployee(form);
     if (result.ok) {
+      onCreated?.(result.employee);
       setForm({ ...EMPTY_FORM, projectId: form.projectId });
     }
   };
@@ -128,7 +130,12 @@ export default function EmployeeForm() {
         </div>
       </div>
 
-      <button type="submit" className="primary-button" disabled={savingEmployee || !projects.length}>
+      <button
+        type="submit"
+        className="primary-button register-button"
+        disabled={savingEmployee || !projects.length}
+      >
+        <UserPlus size={18} aria-hidden="true" />
         {savingEmployee ? "Cadastrando…" : "Cadastrar funcionário"}
       </button>
     </form>

@@ -16,6 +16,37 @@ function toISODate(date) {
   return `${year}-${month}-${day}`;
 }
 
+/** Soma dias trabalhados contando a data inicial e pulando apenas domingos. */
+export function addWorkingDays(startISO, amount) {
+  const [year, month, day] = startISO.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  let workingDays = 0;
+
+  while (workingDays < amount) {
+    if (date.getDay() !== 0) workingDays += 1;
+    if (workingDays < amount) date.setDate(date.getDate() + 1);
+  }
+
+  return toISODate(date);
+}
+
+/** Soma dias corridos a uma data ISO, usada para navegar entre fechamentos. */
+export function addCalendarDays(dateISO, amount) {
+  const [year, month, day] = dateISO.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + amount);
+  return toISODate(date);
+}
+
+/** Retorna a quantidade de dias corridos entre duas datas ISO, inclusive. */
+export function getCalendarDayCount(startISO, endISO) {
+  const [startYear, startMonth, startDay] = startISO.split("-").map(Number);
+  const [endYear, endMonth, endDay] = endISO.split("-").map(Number);
+  const start = new Date(startYear, startMonth - 1, startDay);
+  const end = new Date(endYear, endMonth - 1, endDay);
+  return Math.round((end - start) / 86400000) + 1;
+}
+
 /** Retorna a segunda-feira (ISO) da semana da data informada, no formato YYYY-MM-DD. */
 export function getWeekStart(date = new Date()) {
   const clone = new Date(date);
@@ -24,6 +55,58 @@ export function getWeekStart(date = new Date()) {
   clone.setDate(clone.getDate() + diffToMonday);
   clone.setHours(0, 0, 0, 0);
   return toISODate(clone);
+}
+
+/** Garante que o início de qualquer fechamento seja sempre uma segunda-feira. */
+export function normalizePeriodStart(dateISO) {
+  if (!dateISO) return dateISO;
+  const [year, month, day] = dateISO.split("-").map(Number);
+  return getWeekStart(new Date(year, month - 1, day));
+}
+
+export function isMonday(dateISO) {
+  if (!dateISO) return false;
+  const [year, month, day] = dateISO.split("-").map(Number);
+  return new Date(year, month - 1, day).getDay() === 1;
+}
+
+/** Retorna as segundas-feiras que cobrem todo um intervalo de datas. */
+export function getWeekStartsBetween(startISO, endISO) {
+  const weekStarts = [];
+  const [startYear, startMonth, startDay] = startISO.split("-").map(Number);
+  const [endYear, endMonth, endDay] = endISO.split("-").map(Number);
+  const lastWeekStart = getWeekStart(new Date(endYear, endMonth - 1, endDay));
+  let weekStart = getWeekStart(new Date(startYear, startMonth - 1, startDay));
+
+  while (weekStart <= lastWeekStart) {
+    weekStarts.push(weekStart);
+    weekStart = addWeeks(weekStart, 1);
+  }
+
+  return weekStarts;
+}
+
+/** Converte uma data de trabalho em sua semana e chave de dia persistidas. */
+export function getAttendanceSlot(dateISO) {
+  const [year, month, day] = dateISO.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  const weekday = date.getDay();
+  const dayKeys = { 1: "seg", 2: "ter", 3: "qua", 4: "qui", 5: "sex", 6: "sab" };
+  return { weekStart: getWeekStart(date), day: dayKeys[weekday] || null };
+}
+
+/** Retorna todas as datas trabalhadas (segunda a sábado) dentro do intervalo. */
+export function getWorkingDatesBetween(startISO, endISO) {
+  const dates = [];
+  const [year, month, day] = startISO.split("-").map(Number);
+  const cursor = new Date(year, month - 1, day);
+
+  while (toISODate(cursor) <= endISO) {
+    if (cursor.getDay() !== 0) dates.push(toISODate(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return dates;
 }
 
 export function addWeeks(weekStartISO, amount) {

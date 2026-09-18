@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Building2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 // ALTERAÇÃO: importa a lista de períodos disponíveis (semanal/quinzenal) e o
 // padrão sugerido (quinzenal, o mais usado na empresa) para montar o seletor.
@@ -74,7 +75,8 @@ export default function ProjectForm() {
         </div>
       </fieldset>
 
-      <button type="submit" className="primary-button" disabled={savingProject}>
+      <button type="submit" className="primary-button register-button" disabled={savingProject}>
+        <Building2 size={18} aria-hidden="true" />
         {savingProject ? "Cadastrando…" : "Cadastrar obra"}
       </button>
     </form>

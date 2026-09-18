@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
-export default function Modal({ title, onClose, children }) {
+export default function Modal({ title, onClose, children, footer }) {
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -19,7 +20,8 @@ export default function Modal({ title, onClose, children }) {
     };
   }, [onClose]);
 
-  return (
+  return createPortal(
+    (
     <div className="modal-overlay" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div
         className="modal-dialog"
@@ -37,7 +39,10 @@ export default function Modal({ title, onClose, children }) {
           </button>
         </div>
         <div className="modal-body">{children}</div>
+        {footer && <div className="modal-footer">{footer}</div>}
       </div>
     </div>
+    ),
+    document.body
   );
 }

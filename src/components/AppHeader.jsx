@@ -41,7 +41,7 @@ export default function AppHeader() {
           ))}
         </nav>
 
-        <button type="button" className="app-header-logout" onClick={signOut} aria-label="Sair">
+        <button type="button" className="app-header-logout" onClick={signOut} aria-label="Sair" title="Sair do app">
           <LogOut size={16} strokeWidth={2.2} aria-hidden="true" />
         </button>
       </div>

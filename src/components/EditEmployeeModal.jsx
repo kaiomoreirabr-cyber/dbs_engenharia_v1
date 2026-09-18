@@ -22,8 +22,21 @@ export default function EditEmployeeModal({ employee, onClose }) {
   };
 
   return (
-    <Modal title="Editar funcionário" onClose={onClose}>
-      <form onSubmit={handleSubmit}>
+    <Modal
+      title="Editar funcionário"
+      onClose={onClose}
+      footer={(
+        <div className="modal-actions">
+          <button type="button" className="secondary-button" onClick={onClose}>
+            Cancelar
+          </button>
+          <button type="submit" form="edit-employee-form" className="primary-button" disabled={savingEmployee}>
+            {savingEmployee ? "Salvando…" : "Salvar alterações"}
+          </button>
+        </div>
+      )}
+    >
+      <form id="edit-employee-form" onSubmit={handleSubmit}>
         <div className="form-grid">
           <div className="span-2">
             <label className="field-label" htmlFor="edit-employee-name">
@@ -106,14 +119,6 @@ export default function EditEmployeeModal({ employee, onClose }) {
           </div>
         </div>
 
-        <div className="modal-actions">
-          <button type="button" className="secondary-button" onClick={onClose}>
-            Cancelar
-          </button>
-          <button type="submit" className="primary-button" disabled={savingEmployee}>
-            {savingEmployee ? "Salvando…" : "Salvar alterações"}
-          </button>
-        </div>
       </form>
     </Modal>
   );
