@@ -1546,7 +1546,7 @@ a:focus-visible {
 .attendance-report-dates-separator {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.5rem;
   font-weight: 800;
 }
 
