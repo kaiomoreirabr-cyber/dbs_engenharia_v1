@@ -1458,7 +1458,7 @@ a:focus-visible {
 
 .attendance-date-field > span {
   color: var(--muted);
-  font-size: 0.58rem;
+  font-size: 0.45rem;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -1515,7 +1515,7 @@ a:focus-visible {
 
 .attendance-report-dates label span {
   color: var(--muted);
-  font-size: 0.58rem;
+  font-size: 0.50rem;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -1529,7 +1529,7 @@ a:focus-visible {
   background: transparent;
   color: var(--ink);
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.58rem;
   font-weight: 700;
 }
 
