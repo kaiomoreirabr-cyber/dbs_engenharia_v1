@@ -3,7 +3,7 @@
 Aplicação para cadastrar obras, gerenciar a equipe e fazer a chamada semanal de
 frequência, com fechamento automático de pagamento (incluindo chave Pix para
 copiar). Construída com **Vite + React** e **Supabase** (banco de dados +
-tempo real), pronta para deploy na **Vercel**.
+tempo real), pronta  para o  deploy na **Vercel**.
 
 ## Funcionalidades
 
