@@ -70,7 +70,9 @@ export default function ChamadaPage() {
   const currentWeekStart = reportWeekStarts[weekIndex] || reportWeekStarts[0];
   const periodLabel = closingPeriod === "quinzenal" ? "Quinzena" : "Semana";
   const currentWeek = getWeekStart();
-  const current = reportStartDate <= currentWeek && currentWeek <= reportEndDate;
+  const current = closingPeriod === "semanal"
+    ? reportStartDate === currentWeek
+    : reportStartDate <= currentWeek && currentWeek <= reportEndDate;
 
   const handleReportStartChange = (event) => {
     const nextStartDate = event.target.value;
@@ -84,8 +86,10 @@ export default function ChamadaPage() {
     setReportDateRange(nextStartDate, nextEndDate);
   };
 
-  const handleReturnToToday = () => {
-    const currentReportStart = addWeeks(getWeekStart(), -1);
+  const handleReturnToCurrentPeriod = () => {
+    const currentReportStart = closingPeriod === "semanal"
+      ? getWeekStart()
+      : addWeeks(getWeekStart(), -1);
     const currentReportEnd = closingPeriod === "semanal"
       ? getPeriodEnd(currentReportStart, closingPeriod)
       : addWorkingDays(currentReportStart, 12);
@@ -137,22 +141,23 @@ export default function ChamadaPage() {
             </button>
             <div className="period-nav-label">
               <div className="attendance-report-dates" aria-label="Período usado no relatório">
-                <DateInputField
+                <DatePickerField
                   label="Início"
                   value={reportStartDate}
                   onChange={handleReportStartChange}
+                  mondayOnly
                   tone="start"
                 />
                 <span className="attendance-report-dates-separator">até</span>
-                <DateInputField label="Fim" value={reportEndDate} readOnly tone="end" />
+                <DatePickerField label="Fim" value={reportEndDate} readOnly tone="end" />
               </div>
               {!current && (
                 <button
                   type="button"
                   className="week-today-link"
-                  onClick={handleReturnToToday}
+                  onClick={handleReturnToCurrentPeriod}
                 >
-                  voltar para hoje
+                  voltar para período atual
                 </button>
               )}
             </div>
@@ -255,31 +260,123 @@ export default function ChamadaPage() {
   );
 }
 
-function DateInputField({ label, value, onChange, readOnly = false, tone }) {
-  const inputRef = useRef(null);
+function DatePickerField({ label, value, onChange, mondayOnly = false, readOnly = false, tone }) {
+  const { showError } = useToast();
+  const [open, setOpen] = useState(false);
+  const [month, setMonth] = useState(() => getMonthDate(value));
+  const pickerRef = useRef(null);
+  const days = getCalendarDays(month);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!pickerRef.current?.contains(event.target)) setOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  const handleSelect = (date) => {
+    if (!date) return;
+    if (mondayOnly && !isMonday(date)) {
+      showError("O periodo deve iniciar em uma segunda-feira.");
+      return;
+    }
+    onChange({ target: { value: date } });
+    setOpen(false);
+  };
 
   return (
-    <label className={`attendance-date-field date-tone-${tone}`}>
-      <span>{label}</span>
-      <input
-        ref={inputRef}
-        type="date"
-        value={value}
-        onChange={onChange}
-        readOnly={readOnly}
-        aria-readonly={readOnly}
-      />
-      {!readOnly && (
-        <button
-          type="button"
-          className="attendance-calendar-button"
-          onClick={() => inputRef.current?.showPicker?.() || inputRef.current?.click()}
-          aria-label={`Escolher ${label.toLowerCase()}`}
-          title="Editar data de início"
-        >
-          <CalendarDays size={15} aria-hidden="true" />
-        </button>
+    <div ref={pickerRef} className={`report-date-picker attendance-date-picker date-tone-${tone}`}>
+      <button
+        type="button"
+        className={`report-date-field${readOnly ? " is-read-only" : ""}`}
+        onClick={() => !readOnly && setOpen((current) => !current)}
+        aria-disabled={readOnly}
+      >
+        <span className="report-date-label">{label}</span>
+        <span className="report-date-value">
+          <strong>{formatDisplayDate(value)}</strong>
+          {!readOnly && <CalendarDays className="report-date-icon" size={18} aria-hidden="true" />}
+        </span>
+      </button>
+      {open && !readOnly && (
+        <div className="report-calendar" role="dialog" aria-label={`Escolher ${label.toLowerCase()}`}>
+          <div className="report-calendar-header">
+            <button type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Mês anterior">
+              <ChevronLeft size={16} />
+            </button>
+            <strong>{formatMonth(month)}</strong>
+            <button type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Próximo mês">
+              <ChevronRight size={16} />
+            </button>
+          </div>
+          <div className="report-calendar-weekdays" aria-hidden="true">
+            {["D", "S", "T", "Q", "Q", "S", "S"].map((day, index) => <span key={`${day}-${index}`}>{day}</span>)}
+          </div>
+          <div className="report-calendar-grid">
+            {days.map((date, index) => (
+              <button
+                key={`${date || "empty"}-${index}`}
+                type="button"
+                disabled={!date || isOutsideMonth(date, month)}
+                className={`${date === value ? "is-selected" : ""}${date && isOutsideMonth(date, month) ? " is-outside-month" : ""}${date && mondayOnly && !isMonday(date) ? " is-invalid-start" : ""}`}
+                onClick={() => handleSelect(date)}
+              >
+                {date ? Number(date.slice(-2)) : null}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
-    </label>
+    </div>
   );
+}
+
+function isOutsideMonth(isoDate, monthDate) {
+  const monthPrefix = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`;
+  return !isoDate.startsWith(`${monthPrefix}-`);
+}
+
+function getMonthDate(isoDate) {
+  const [year, month] = isoDate.split("-").map(Number);
+  return new Date(year, month - 1, 1);
+}
+
+function shiftMonth(date, amount) {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
+}
+
+function formatMonth(date) {
+  return date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
+
+function getCalendarDays(month) {
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const days = [];
+  const previousMonth = new Date(month.getFullYear(), month.getMonth(), 0);
+  for (let index = firstDay; index > 0; index -= 1) {
+    const day = previousMonth.getDate() - index + 1;
+    days.push(`${previousMonth.getFullYear()}-${String(previousMonth.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+  }
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    days.push(`${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+  }
+  return days;
+}
+
+function formatDisplayDate(isoDate) {
+  if (!isoDate) return "Selecione uma data";
+  const [year, month, day] = isoDate.split("-");
+  return `${day}/${month}/${year}`;
 }

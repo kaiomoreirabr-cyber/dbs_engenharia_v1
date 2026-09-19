@@ -44,6 +44,7 @@ export default function RelatoriosPage() {
   useEffect(() => {
     if (!activeProject || !activeEmployees.length || !startDate || !endDate || startDate > endDate) {
       setRows([]);
+      setReportLoading(false);
       return undefined;
     }
 
@@ -86,6 +87,7 @@ export default function RelatoriosPage() {
   };
 
   const totalConsolidado = rows.reduce((sum, row) => sum + row.total, 0);
+  const reportReady = !reportLoading && rows.length === activeEmployees.length;
 
   return (
     <div className="page">
@@ -140,9 +142,15 @@ export default function RelatoriosPage() {
               {/* ALTERAÇÃO: era um botão só com o ícone de impressora
                   (.icon-action) — trocado pelo botão vermelho completo, no
                   estilo enviado como referência. */}
-              <button type="button" className="print-report-button" onClick={() => window.print()}>
+              <button
+                type="button"
+                className="print-report-button"
+                onClick={() => window.print()}
+                disabled={!reportReady}
+                aria-disabled={!reportReady}
+              >
                 <Printer size={16} />
-                Gerar Relatório
+                {reportLoading ? "Atualizando..." : "Gerar Relatório"}
               </button>
             </div>
           </div>
@@ -159,9 +167,9 @@ export default function RelatoriosPage() {
 
           <div className="report-table-head" aria-hidden="true">
             <span>Funcionário · função</span>
-            <span>Completas</span>
-            <span>Meias</span>
-            <span>Ausências</span>
+            <span className="report-status-full">Diárias completas</span>
+            <span className="report-status-half">Meias diárias</span>
+            <span className="report-status-absent">Ausente</span>
             <span>A receber</span>
             <span>Chave Pix</span>
           </div>
@@ -354,9 +362,9 @@ function ReportRow({ employee, full, half, absent, total }) {
       <strong data-label="Funcionário">
         {employee.name} · {employee.role}
       </strong>
-      <span data-label="Completas">{full}</span>
-      <span data-label="Meias">{half}</span>
-      <span data-label="Ausências">{absent}</span>
+      <span className="report-status-full" data-label="Diárias completas">{full}</span>
+      <span className="report-status-half" data-label="Meias diárias">{half}</span>
+      <span className="report-status-absent" data-label="Ausente">{absent}</span>
       <span data-label="A receber" className="report-total">
         {formatCurrency(total)}
       </span>

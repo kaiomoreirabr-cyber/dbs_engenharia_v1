@@ -539,17 +539,108 @@ button:active:not(:disabled) {
 /* ---------- Seletor de obra (ProjectSelect.jsx) ---------- */
 
 .project-select {
+  position: relative;
   display: block;
 }
 
 .project-select-label {
   display: block;
-  margin-bottom: 6px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  margin: 0 0 8px 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0;
   text-transform: uppercase;
-  color: var(--muted);
+  color: #5d6876;
+}
+
+.project-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  border: 2px solid #aeb8c3;
+  border-radius: 14px;
+  background: #f1f4f8;
+  padding: 0 18px;
+  color: #152235;
+  font: inherit;
+  font-size: 1.05rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-select-trigger:focus-visible,
+.project-select-trigger.is-open {
+  outline: 0;
+  border-color: #8d9ba9;
+  box-shadow: 0 0 0 2px rgba(57, 116, 184, 0.14);
+}
+
+.project-select-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-select-trigger > svg {
+  flex: 0 0 auto;
+  color: #152235;
+  transition: transform 0.15s ease;
+}
+
+.project-select-trigger.is-open > svg {
+  transform: rotate(180deg);
+}
+
+.project-select-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  max-height: min(240px, 45vh);
+  overflow-y: auto;
+  border: 2px solid #d7dce2;
+  border-radius: 14px;
+  background: #f1f4f8;
+  padding: 8px;
+  box-shadow: 0 12px 24px rgba(24, 36, 52, 0.18);
+}
+
+.project-select-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  padding: 0 18px;
+  color: #152235;
+  font: inherit;
+  font-size: 1.05rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-select-option.is-selected {
+  background: #2874d4;
+  color: #fff;
+}
+
+.project-select-option:hover,
+.project-select-option:focus-visible {
+  background: #dfe8f4;
+  outline: 0;
+}
+
+.project-select-option.is-selected:hover,
+.project-select-option.is-selected:focus-visible {
+  background: #2874d4;
 }
 
 /* ---------- Barra de navegação inferior (BottomNav.jsx) ---------- */
@@ -1406,10 +1497,15 @@ a:focus-visible {
    inline na própria página em vez de um componente à parte. */
 
 .period-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: start;
   gap: 10px;
+}
+
+.period-nav > .icon-action {
+  width: 34px;
+  margin-top: 5px;
 }
 
 .period-nav-label {
@@ -1429,7 +1525,54 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 360px;
+}
+
+.attendance-date-picker {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+}
+
+.attendance-date-picker .report-date-field {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 5px 9px;
+  border-color: var(--red);
+}
+
+.attendance-date-picker .report-date-field strong {
+  font-size: 0.82rem;
+}
+
+.attendance-date-picker.date-tone-start .report-date-field {
+  border-color: #18a957;
+}
+
+.attendance-date-picker.date-tone-start .report-date-label {
+  color: #18a957;
+}
+
+.attendance-date-picker.date-tone-start .report-date-icon {
+  color: #1267d6;
+}
+
+.attendance-date-picker.date-tone-end .report-date-field {
+  border-color: #e02b35;
+}
+
+.attendance-date-picker.date-tone-end .report-date-label {
+  color: #e02b35;
+}
+
+.attendance-date-picker.date-tone-end .report-date-icon {
+  color: var(--red);
+}
+
+.attendance-date-picker .report-date-field.is-read-only {
+  cursor: default;
 }
 
 .attendance-report-dates label {
@@ -1941,6 +2084,7 @@ a:focus-visible {
   justify-content: space-between;
   gap: 8px;
   width: 100%;
+  padding-right: 4px;
 }
 
 .report-date-icon {
@@ -2178,6 +2322,30 @@ a:focus-visible {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--ink-soft);
+}
+
+.report-table-head .report-status-full,
+.report-row .report-status-full,
+.report-row .report-status-full::before {
+  color: #168447;
+}
+
+.report-table-head .report-status-half,
+.report-row .report-status-half,
+.report-row .report-status-half::before {
+  color: #a56a00;
+}
+
+.report-table-head .report-status-absent,
+.report-row .report-status-absent,
+.report-row .report-status-absent::before {
+  color: #6b7280;
+}
+
+[data-theme="dark"] .report-table-head .report-status-absent,
+[data-theme="dark"] .report-row .report-status-absent,
+[data-theme="dark"] .report-row .report-status-absent::before {
+  color: #c4c9d1;
 }
 
 .report-list {
@@ -2606,6 +2774,23 @@ a:focus-visible {
    ficavam pequenas demais quando geradas/impressas pelo celular; (3) mostra
    o letreiro da empresa (.print-letterhead) no topo da folha. */
 @media print {
+  html,
+  body,
+  #root,
+  .app-shell,
+  .app-main,
+  .page,
+  .page-transition {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  body,
+  #root {
+    overflow-x: visible !important;
+  }
+
   :root,
   [data-theme="dark"],
   [data-theme="light"] {
@@ -2778,6 +2963,14 @@ a:focus-visible {
   .report-row {
     font-size: 1rem;
     padding: 14px 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-list {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   .report-row strong {
@@ -2788,6 +2981,21 @@ a:focus-visible {
   .report-row > div::before {
     font-size: 0.72rem;
     color: var(--muted);
+  }
+
+  .report-table-head span:nth-child(2),
+  .report-status-full::before {
+    color: #168447;
+  }
+
+  .report-table-head span:nth-child(3),
+  .report-status-half::before {
+    color: #a56a00;
+  }
+
+  .report-table-head span:nth-child(4),
+  .report-status-absent::before {
+    color: #6b7280;
   }
 
   .report-total {
