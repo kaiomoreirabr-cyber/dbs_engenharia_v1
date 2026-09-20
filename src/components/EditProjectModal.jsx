@@ -1,23 +1,17 @@
 import { useState } from "react";
 import Modal from "./Modal";
 import { useApp } from "../context/AppContext";
-// ALTERAÇÃO: importa a lista de períodos e a função que garante um valor
-// válido (usada para inicializar o formulário mesmo se a obra vier sem essa
-// coluna preenchida, caso de bancos ainda não migrados).
 import { CLOSING_PERIODS, normalizeClosingPeriod } from "../lib/dateUtils";
 
 export default function EditProjectModal({ project, onClose }) {
   const { editProject, savingProject } = useApp();
   const [name, setName] = useState(project.name);
-  // ALTERAÇÃO: novo estado, inicializado com o período de fechamento atual
-  // da obra (ou "quinzenal" como fallback, via normalizeClosingPeriod).
   const [closingPeriod, setClosingPeriod] = useState(
     normalizeClosingPeriod(project.closing_period)
   );
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    // ALTERAÇÃO: passa o período (possivelmente alterado) para editProject.
     const result = await editProject(project.id, name, closingPeriod);
     if (result.ok) onClose();
   };
@@ -51,10 +45,6 @@ export default function EditProjectModal({ project, onClose }) {
           maxLength={80}
         />
 
-        {/* ALTERAÇÃO: bloco novo — mesmo seletor semanal/quinzenal usado no
-            cadastro (ProjectForm.jsx), agora para edição. Trocar o período
-            aqui passa a valer a partir da próxima navegação de período; o
-            histórico de chamadas já registrado não é apagado. */}
         <fieldset className="period-fieldset">
           <legend className="field-label">Período de fechamento (pagamento)</legend>
           <div className="period-toggle" role="radiogroup" aria-label="Período de fechamento">

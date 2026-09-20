@@ -135,14 +135,6 @@ export function isCurrentWeek(weekStartISO) {
   return weekStartISO === getWeekStart();
 }
 
-// ==================== ALTERAÇÃO: períodos de fechamento ====================
-// Tudo abaixo é novo. Antes o app só entendia "semana" (1 bloco de 6 dias).
-// Agora cada obra escolhe um "período de fechamento": semanal (1 semana) ou
-// quinzenal (2 semanas seguidas). As funções abaixo generalizam a navegação
-// e os cálculos de data para trabalhar com 1 ou 2 semanas, sem quebrar as
-// funções de semana já existentes acima (que continuam sendo usadas
-// internamente, semana a semana).
-
 /** Quantas semanas cada período de fechamento cobre. */
 export const CLOSING_PERIODS = {
   semanal: { value: "semanal", label: "Semanal", weeks: 1 },
@@ -199,7 +191,6 @@ export function isCurrentPeriod(periodStart, closingPeriod = DEFAULT_CLOSING_PER
   return todayISO >= periodStart && todayISO <= periodEnd;
 }
 
-// ==================== ALTERAÇÃO: navegação mobile (tela "Chamada") ====================
 /**
  * Retorna a chave do dia de hoje (DAY_KEYS) — "seg", "ter" etc. Usado para
  * já abrir a Chamada na aba do dia certo quando o usuário entra na tela.

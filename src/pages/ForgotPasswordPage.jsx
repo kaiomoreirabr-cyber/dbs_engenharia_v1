@@ -3,11 +3,6 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, MailCheck, Send } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-// ALTERAÇÃO: página nova — "esqueci minha senha". Só pede o e-mail e chama
-// sendPasswordReset (ver AuthContext.jsx), que dispara o e-mail de
-// recuperação do Supabase. Por segurança, mostra a mesma mensagem de sucesso
-// mesmo se o e-mail não existir na base — assim ninguém consegue usar essa
-// tela pra descobrir quais e-mails têm cadastro.
 export default function ForgotPasswordPage() {
   const { sendPasswordReset } = useAuth();
   const [email, setEmail] = useState("");
@@ -22,9 +17,6 @@ export default function ForgotPasswordPage() {
     const { error: resetError } = await sendPasswordReset(email.trim());
     setSubmitting(false);
 
-    // ALTERAÇÃO: só trata erro de rede/limite de envio como erro de verdade;
-    // "e-mail não encontrado" o Supabase nem informa por padrão, então
-    // qualquer outro caso vira a mesma tela de sucesso.
     if (resetError && resetError.status && resetError.status >= 500) {
       setError("Não foi possível enviar o e-mail agora. Tente novamente em instantes.");
       return;

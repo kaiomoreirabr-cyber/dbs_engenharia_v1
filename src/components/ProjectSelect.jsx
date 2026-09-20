@@ -2,9 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { useApp } from "../context/AppContext";
 
-// ALTERAÇÃO: arquivo novo. É o combo "OBRA SELECIONADA" que aparece no topo
-// das páginas Chamada e Relatórios nas suas capturas de tela — deixa trocar
-// de obra em 1 toque sem precisar ir até a página "Obras".
 export default function ProjectSelect() {
   const { projects, activeProjectId, setActiveProjectId } = useApp();
   const [open, setOpen] = useState(false);

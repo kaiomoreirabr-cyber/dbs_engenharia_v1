@@ -2,10 +2,6 @@ import { Palette, Sun, Moon } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import { useTheme } from "../context/ThemeContext";
 
-// ALTERAÇÃO: arquivo novo. É a aba "Tema" que aparecia nas suas capturas de
-// tela — alterna entre claro e escuro. Fica numa página própria (em vez de
-// um botão escondido em algum canto) porque, no celular, é mais fácil achar
-// e tocar numa aba fixa do que caçar um ícone pequeno.
 export default function TemaPage() {
   const { theme, setTheme } = useTheme();
 

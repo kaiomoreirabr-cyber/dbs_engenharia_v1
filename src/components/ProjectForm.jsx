@@ -1,28 +1,18 @@
 import { useState } from "react";
 import { Building2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
-// ALTERAÇÃO: importa a lista de períodos disponíveis (semanal/quinzenal) e o
-// padrão sugerido (quinzenal, o mais usado na empresa) para montar o seletor.
 import { CLOSING_PERIODS, DEFAULT_CLOSING_PERIOD } from "../lib/dateUtils";
 
 export default function ProjectForm() {
   const { addProject, savingProject } = useApp();
   const [name, setName] = useState("");
-  // ALTERAÇÃO: novo estado para o período de fechamento escolhido no
-  // cadastro. Começa em "quinzenal" (DEFAULT_CLOSING_PERIOD) por ser o modo
-  // de pagamento mais usado na empresa, mas o usuário pode trocar para
-  // "semanal" antes de salvar.
   const [closingPeriod, setClosingPeriod] = useState(DEFAULT_CLOSING_PERIOD);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    // ALTERAÇÃO: passa o período escolhido para addProject.
     const result = await addProject(name, closingPeriod);
     if (result.ok) {
       setName("");
-      // ALTERAÇÃO: mantém o período selecionado para o próximo cadastro
-      // (a maioria das obras cadastradas em sequência costuma usar o mesmo
-      // regime de pagamento), só o nome é limpo.
     }
   };
 
@@ -47,10 +37,6 @@ export default function ProjectForm() {
         maxLength={80}
       />
 
-      {/* ALTERAÇÃO: bloco novo — seletor de período de fechamento (pagamento).
-          Usa <fieldset>/<radio> para permitir escolher entre semanal e
-          quinzenal, mantendo acessibilidade (navegação por teclado, leitor
-          de tela agrupa as opções pelo <legend>). */}
       <fieldset className="period-fieldset">
         <legend className="field-label">Período de fechamento (pagamento)</legend>
         <p className="field-hint">

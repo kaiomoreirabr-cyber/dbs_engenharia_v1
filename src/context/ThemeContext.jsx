@@ -1,9 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-// ALTERAÇÃO: arquivo novo. Controla o tema claro/escuro do app inteiro.
-// Diferente dos artifacts de exemplo do Claude, este é um projeto Vite/React
-// de verdade que roda no navegador do usuário — então usar localStorage aqui
-// é normal e correto (não é o ambiente de preview do Claude).
 const THEME_STORAGE_KEY = "obra-frequencia:theme";
 const ThemeContext = createContext(null);
 
@@ -27,9 +23,6 @@ function getInitialTheme() {
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(getInitialTheme);
 
-  // Aplica o atributo data-theme no <html> (usado pelas variáveis CSS em
-  // index.css) e atualiza a cor da barra do sistema (status bar / navegador)
-  // para combinar com o tema, deixando a sensação de app nativo completa.
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     const meta = document.querySelector('meta[name="theme-color"]');

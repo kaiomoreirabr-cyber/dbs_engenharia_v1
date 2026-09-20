@@ -15,10 +15,6 @@
   --shadow-panel: 0 18px 46px rgba(0, 0, 0, 0.07);
   --shadow-card: 0 10px 25px rgba(0, 0, 0, 0.04);
 
-  /* ALTERAÇÃO: bloco novo — variáveis semânticas que antes eram cores fixas
-     (#fff, #fafafa, #666 etc.) espalhadas pelo CSS. Extraí-las para variáveis
-     permite trocar TODO o app para o modo escuro só reatribuindo estes
-     valores lá embaixo, em [data-theme="dark"], sem tocar em cada regra. */
   --surface: #ffffff; /* fundo de cards, painéis, inputs, modais */
   --surface-alt: #fafafa; /* fundo "rebaixado" (form-card, rodapé da tabela) */
   --surface-hover: #fffafa; /* hover sutil em linhas de tabela */
@@ -42,12 +38,6 @@
   --tint-count-text: #08783a;
 }
 
-/* ==================== ALTERAÇÃO: tema escuro ("Tema" no app) ==================== */
-/* Redefine as MESMAS variáveis acima com valores escuros. Como todo o resto
-   do CSS já usa var(--algo) em vez de cor fixa, o app inteiro muda de
-   aparência só com esta troca — nenhuma outra regra precisa saber se está
-   claro ou escuro. O atributo data-theme é aplicado na tag <html> pelo
-   ThemeContext.jsx (novo arquivo) e persistido no localStorage do celular. */
 [data-theme="dark"] {
   --ink: #f3f1ee;
   --red: #2d7df6;
@@ -83,11 +73,6 @@
   --tint-count-text: #9ce9b8;
 }
 
-/* ALTERAÇÃO: bloco novo — avisa o navegador qual esquema de cor cada tema
-   usa. Sem isso, controles NATIVOS do sistema (o <select> de obra, a caixa
-   de rolagem etc.) continuam sendo desenhados pelo navegador em branco fixo
-   mesmo com o resto do app em modo escuro — era uma das causas dos
-   "botões/controles brancos" no tema escuro. */
 :root,
 [data-theme="light"] {
   color-scheme: light;
@@ -172,13 +157,6 @@ body,
 
 * {
   box-sizing: border-box;
-  /* ALTERAÇÃO: bloco novo — remove o retângulo azul/cinza que o Chrome
-     Android e o Safari iOS desenham por cima de QUALQUER elemento tocável
-     (botões, links, cards, chips) enquanto o dedo está pressionando. Isso
-     é o que estava deixando o clique "grotesco": um flash azul-claro que
-     não tem nada a ver com a paleta do app. Com isso zerado, quem define
-     a resposta visual ao toque passa a ser só o CSS abaixo (:active), no
-     vermelho/tons do app — ver ".primary-button:active" etc. mais adiante. */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -208,13 +186,6 @@ select {
   font-family: inherit;
 }
 
-/* ALTERAÇÃO: bloco novo — junto com o "-webkit-tap-highlight-color" acima,
-   isso troca a resposta padrão do navegador ao toque por uma resposta
-   consistente e discreta em TODO o app: um leve "afundar" (scale 0.97) com
-   opacidade reduzida, no lugar do flash azul. Cobre todo botão/link/label
-   clicável de uma vez, sem precisar repetir a regra em cada componente;
-   componentes com uma animação de toque mais específica (ex.: os "cards"
-   de dia na chamada, o bottom-nav) sobrescrevem isso logo abaixo. */
 button,
 a,
 .entity-row,
@@ -234,15 +205,6 @@ button:active:not(:disabled) {
   font-family: "Fraunces", serif;
 }
 
-/* ==================== ALTERAÇÃO: layout mobile-first (navegação por página) ====================
-   Todo este bloco é novo. Antes o app inteiro (Header + cadastros + tabela +
-   relatório) ficava empilhado dentro de ".app-shell/.main-frame", com um
-   header grande fixo no topo. Agora o app virou 5 páginas de verdade
-   (rotas), com uma barra de navegação FIXA embaixo (.bottom-nav) — o padrão
-   de navegação que pediu (fácil de trocar de tela no celular, tipo app de
-   banco). O conteúdo de cada página é só ".page", envolto pela transição
-   em ".page-transition" (ver components/PageTransition.jsx). */
-
 .app-shell {
   display: flex;
   flex-direction: column;
@@ -252,12 +214,6 @@ button:active:not(:disabled) {
 }
 
 /* ---------- Barra de topo com a logo (AppHeader.jsx) ---------- */
-/* ALTERAÇÃO: bloco novo — antes não existia NENHUMA marca da Conserpav no
-   app. Essa barra fica no topo, em qualquer tamanho de tela (sem nenhuma
-   media query que a esconda), resolvendo o "logo não aparece em telas
-   menores". No celular mostra só a marca; a partir de 900px de largura
-   também mostra a navegação (a barra fixa de baixo some nessa faixa, pra
-   não duplicar). */
 .app-header {
   display: flex;
   align-items: center;
@@ -265,11 +221,6 @@ button:active:not(:disabled) {
   gap: 12px;
   flex: 0 0 auto;
   padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-  /* ALTERAÇÃO: era "background: var(--ink)" — --ink é o token de cor de
-     TEXTO, que se inverte por tema (fica quase branco no escuro). Isso
-     deixava a barra quase branca no modo escuro, e o texto "CONSER"
-     (também quase branco) sumia nela. Cor fixa e escura sempre, como uma
-     barra de marca de verdade, igual à referência que você mandou. */
   background: #171a1f;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -324,9 +275,6 @@ button:active:not(:disabled) {
   display: none;
 }
 
-/* ALTERAÇÃO: bloco novo — agrupa a navegação (some no celular, ver acima) e
-   o botão de sair (esse sempre aparece, celular e desktop, já que o app
-   agora exige login). */
 .app-header-right {
   display: flex;
   align-items: center;
@@ -439,8 +387,6 @@ button:active:not(:disabled) {
   width: 100%;
   max-width: 640px;
   margin: 0 auto;
-  /* ALTERAÇÃO: o safe-area-inset-top agora é tratado pelo .app-header (que
-     fica acima de tudo) — aqui basta um respiro normal. */
   padding: 16px 16px 28px;
   display: flex;
   flex-direction: column;
@@ -454,12 +400,6 @@ button:active:not(:disabled) {
   }
 }
 
-/* ALTERAÇÃO: bloco novo — celulares estreitos (iPhone SE/mini, Android
-   compactos) tinham espaçamento igual ao de telas maiores, o que empurrava
-   o conteúdo da chamada (resumo + navegação + semanas + dias) para baixo da
-   dobra. Aqui o ritmo vertical fica mais compacto só nessa faixa, sem mudar
-   a arquitetura — cada seção continua ocupando 100% da largura, só com
-   menos "ar" entre elas. */
 @media (max-width: 400px) {
   .page {
     gap: 12px;
@@ -736,31 +676,18 @@ button:active:not(:disabled) {
   }
 }
 
-/* ALTERAÇÃO: era só "opacity: 0.7" — junto com o flash azul do navegador
-   (agora removido, ver "-webkit-tap-highlight-color" no topo do arquivo)
-   isso deixava o toque nos ícones bem sem graça/estranho. Agora o ícone
-   "afunda" e o texto some um instante, como um botão de app nativo. */
 .bottom-nav-item:active {
   transform: scale(0.92);
   opacity: 0.75;
   transition: transform 0.08s ease, opacity 0.08s ease;
 }
 
-/* ALTERAÇÃO: a partir de 900px a navegação passa a viver em cima, junto
-   com a logo (ver .app-header-nav em AppHeader.jsx) — aqui ela some pra
-   não duplicar. Fica DEPOIS da definição base de ".bottom-nav" no arquivo
-   de propósito: como as duas regras têm a mesma especificidade, a que vem
-   por último no CSS "ganha" — colocar esse override antes (como uma
-   primeira tentativa) fazia a barra continuar aparecendo no desktop. */
 @media (min-width: 900px) {
   .bottom-nav {
     display: none;
   }
 }
 
-/* ALTERAÇÃO: bloco novo — badge que indica o período de fechamento
-   (Semanal/Quinzenal). Usado no card da obra ativa e na lista de obras
-   cadastradas (ProjectList.jsx). */
 .period-badge {
   display: inline-flex;
   align-items: center;
@@ -776,8 +703,6 @@ button:active:not(:disabled) {
   letter-spacing: 0.02em;
 }
 
-/* ALTERAÇÃO: variante do badge dentro da lista de obras — sem margem
-   superior, pois ali fica lado a lado com o nome da obra, não abaixo. */
 .period-badge-list {
   margin-top: 0;
   flex: 0 0 auto;
@@ -791,14 +716,6 @@ button:active:not(:disabled) {
 }
 
 /* ---------- Panels ---------- */
-/* ALTERAÇÃO: as classes .tab-bar/.tab-button/.tab-pane/.two-col* (do antigo
-   ManagementPanel.jsx, com abas "Cadastrar obras / Cadastrar funcionários"
-   dentro de 1 painel só) foram removidas — cada cadastro agora é uma
-   página própria (ObrasPage.jsx / EquipePage.jsx), então não precisa mais
-   de abas internas nem de grid 2 colunas (no celular, forms + listas
-   empilhados verticalmente já são mais fáceis de usar). .panel continua
-   valendo, é reaproveitado pelo card do relatório (RelatoriosPage.jsx). */
-
 .panel {
   overflow: hidden;
   border: 1px solid var(--line);
@@ -867,10 +784,6 @@ button:active:not(:disabled) {
 }
 
 /* ---------- Autenticação (login / recuperação de senha) ---------- */
-/* ALTERAÇÃO: bloco novo — telas de LoginPage.jsx, ForgotPasswordPage.jsx e
-   ResetPasswordPage.jsx. Reaproveita .form-card/.field/.primary-button (ver
-   acima) pra ficar visualmente igual ao resto do app; aqui só o necessário
-   pra centralizar esse cartão em tela cheia, sem cabeçalho nem navegação. */
 .auth-shell {
   flex: 1;
   width: 100%;
@@ -940,8 +853,6 @@ button:active:not(:disabled) {
   color: var(--green);
 }
 
-/* ALTERAÇÃO: bloco novo — estilos do seletor "Período de fechamento"
-   (semanal/quinzenal) usado em ProjectForm.jsx e EditProjectModal.jsx. */
 .period-fieldset {
   margin: 16px 0 0;
   padding: 0;
@@ -1081,11 +992,6 @@ button:active:not(:disabled) {
   background: var(--red-dark);
 }
 
-/* ALTERAÇÃO: resposta ao toque no celular — "afunda" em vez do flash azul
-   padrão do navegador. Precisa vir DEPOIS de ":hover" e usar a mesma
-   especificidade (uma classe + um pseudo-seletor) para realmente
-   substituir o "translateY(-2px)" do hover enquanto o dedo/mouse está
-   pressionado, no lugar de somar os dois efeitos. */
 .primary-button:active:not(:disabled) {
   transform: scale(0.97);
   background: var(--red-dark);
@@ -1122,10 +1028,6 @@ button:active:not(:disabled) {
 .mini-action {
   border: 1px solid var(--line);
   border-radius: 0.6rem;
-  /* ALTERAÇÃO: era "background: white" fixo — no tema escuro isso criava um
-     botão branco chapado, sem contraste com o resto do app (o bug relatado
-     dos botões "brancos/transparentes" em "Selecionar obra" e "Excluir").
-     Agora usa a superfície do tema ativo. */
   background: var(--surface);
   padding: 0.4rem 0.6rem;
   color: var(--ink-soft);
@@ -1401,8 +1303,6 @@ button:active:not(:disabled) {
   flex: 0 0 auto;
   border: 1px solid var(--line);
   border-radius: 0.6rem;
-  /* ALTERAÇÃO: mesma correção do .mini-action — era "background: white"
-     fixo, ficava um quadrado branco no tema escuro. */
   background: var(--surface);
   color: var(--ink-soft);
   cursor: pointer;
@@ -1717,17 +1617,7 @@ a:focus-visible {
   color: var(--red);
 }
 
-/* ==================== ALTERAÇÃO: resumo compacto (chips) ====================
-   Substitui os antigos "summary cards" grandes (3 cartões empilhados, muito
-   espaço vertical) por uma única linha de chips — o formato compacto que
-   aparecia nas suas capturas de tela ("● 0 Completas · ● 0 Meias ·
-   ● 12 Ausências"). Usado no topo de pages/ChamadaPage.jsx. */
-
 .summary-chip-row {
-  /* ALTERAÇÃO: era "flex + wrap" — em telas estreitas os 3 chips quebravam
-     2+1, deixando um pedaço de linha vazio (o "espaço sobrando" relatado).
-     Como grid de 3 colunas iguais, os 3 sempre ocupam a largura toda,
-     numa faixa só. */
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
@@ -1795,10 +1685,6 @@ a:focus-visible {
 }
 
 /* ---------- Navegação de período (Semana/Quinzena) ---------- */
-/* ALTERAÇÃO: bloco novo, usado em pages/ChamadaPage.jsx. É a mesma ideia do
-   antigo .week-selector (agora removido junto com WeekSelector.jsx), só que
-   inline na própria página em vez de um componente à parte. */
-
 .period-nav {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr) 34px;
@@ -2038,12 +1924,6 @@ a:focus-visible {
 }
 
 .week-in-period-option.is-active {
-  /* ALTERAÇÃO: era um fundo "tint" (vermelho bem clarinho) com texto
-     --red-dark — no tema escuro esse tom ficava baixo contraste, meio
-     "apagado" (o mesmo problema relatado nos botões). Trocado para fundo
-     vermelho sólido + texto branco, igual ao padrão que já funciona bem em
-     ".day-tab.is-active" logo abaixo — fica óbvio qual semana está ativa em
-     qualquer tema. */
   border-color: var(--red);
   background: var(--red);
   color: white;
@@ -2137,10 +2017,6 @@ a:focus-visible {
 }
 
 /* ---------- Lista de chamada (pages/ChamadaPage.jsx) ---------- */
-/* ALTERAÇÃO: bloco novo — substitui a tabela larga (.attendance-table, hoje
-   removida) por uma lista vertical: 1 linha por funcionário, mostrando só o
-   dia selecionado nas abas acima. Sem rolagem horizontal no celular. */
-
 .attendance-list {
   display: flex;
   flex-direction: column;
@@ -2166,12 +2042,6 @@ a:focus-visible {
 }
 
 /* ---------- Elementos reaproveitados da chamada (funcionário + botão de status) ---------- */
-/* ALTERAÇÃO: esta seção era bem maior (tabela larga, cabeçalho de semana,
-   legenda, rodapé) — removi tudo que não é mais usado depois que
-   AttendanceTable.jsx e WeekSelector.jsx foram substituídos por
-   pages/ChamadaPage.jsx. O que ficou (célula do funcionário e botão de
-   status) continua sendo usado, agora dentro de ".attendance-row". */
-
 .employee-cell {
   display: flex;
   align-items: center;
@@ -2203,11 +2073,6 @@ a:focus-visible {
 
 .employee-cell-meta {
   margin: 0;
-  /* ALTERAÇÃO: era 0.75rem em --muted (cinza clarinho) — a função (ex.
-     "Pedreiro") e o valor da diária ficavam difíceis de ler de relance.
-     Aumentei um pouco o tamanho/peso da linha toda; o valor da diária em si
-     agora vem num <span> à parte (ver .employee-cell-rate) para se destacar
-     ainda mais, na mesma cor de dinheiro usada no resto do app. */
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--ink-soft);
@@ -2240,8 +2105,6 @@ a:focus-visible {
   transform: translateY(-2px);
 }
 
-/* ALTERAÇÃO: resposta ao toque (celular) — substitui o flash azul padrão
-   do navegador por um "afundar" rápido, coerente com o resto do app. */
 .attendance-button:active:not(:disabled) {
   transform: scale(0.92);
   transition: transform 0.08s ease;
@@ -2299,10 +2162,6 @@ a:focus-visible {
 
 /* ---------- Report panel ---------- */
 
-/* ALTERAÇÃO: ".eyebrow" tinha sido definida junto do antigo cabeçalho
-   global (Header.jsx, removido) e some sem querer na limpeza — trazendo de
-   volta aqui porque RelatoriosPage.jsx ainda usa como rótulo pequeno acima
-   do título "Relatório de pagamento". */
 .eyebrow {
   font-size: 0.72rem;
   font-weight: 700;
@@ -2557,12 +2416,6 @@ a:focus-visible {
   }
 }
 
-/* ALTERAÇÃO: bloco novo — substitui o botão que era só um ícone de
-   impressora (.icon-action) por um botão completo "Gerar Relatório", no
-   mesmo estilo vermelho/borda escura enviado como referência. Cores fixas
-   (não variam com o tema) de propósito, para o botão manter sempre a
-   mesma identidade visual chamativa, igual à referência, tanto no claro
-   quanto no escuro. */
 .print-report-button {
   display: inline-flex;
   align-items: center;
@@ -2588,9 +2441,6 @@ a:focus-visible {
   transform: translateY(0);
 }
 
-/* ALTERAÇÃO: bloco novo — card de destaque com o total somado de todos os
-   funcionários do período, usado em pages/RelatoriosPage.jsx (equivalente
-   ao "TOTAL CONSOLIDADO DA SEMANA" que aparecia na sua captura de tela). */
 .total-consolidado-card {
   display: flex;
   flex-direction: column;
@@ -2713,7 +2563,6 @@ a:focus-visible {
   height: 31px;
   border: 1px solid var(--line);
   border-radius: 0.55rem;
-  /* ALTERAÇÃO: mesma correção — era "background: white" fixo. */
   background: var(--surface);
   color: var(--ink-soft);
   cursor: pointer;
@@ -2786,9 +2635,6 @@ a:focus-visible {
 }
 
 /* ---------- Página Tema (TemaPage.jsx) ---------- */
-/* ALTERAÇÃO: bloco novo — 2 opções grandes (Claro/Escuro), fáceis de tocar
-   no celular, com o ícone e uma frase curta explicando cada uma. */
-
 .theme-option-list {
   display: flex;
   flex-direction: column;
@@ -3081,24 +2927,11 @@ a:focus-visible {
 }
 
 /* ---------- Letreiro de impressão (print-only) ---------- */
-/* ALTERAÇÃO: bloco novo. Some na tela (a página já tem seu próprio
-   cabeçalho) e só aparece no PDF/impressão do relatório — resolve o nome da
-   empresa não aparecendo no relatório gerado, já que antes nada mostrava
-   a marca no papel (o .page-header, que é a única coisa com o nome do app,
-   fica com display:none no print). Fica sempre visível no PDF, em qualquer
-   aparelho, porque não depende de nenhuma media query de largura de tela. */
 .print-letterhead {
   display: none;
 }
 
 /* ---------- Print ---------- */
-/* ALTERAÇÃO: bloco reescrito. Além de esconder navegação/cabeçalho/toast
-   (como antes), agora também: (1) força as cores do tema CLARO mesmo se o
-   celular estiver no tema escuro no momento de gerar o PDF — sem isso o
-   texto saía na cor quase branca do tema escuro sobre o papel branco,
-   ficando "apagado"/quase ilegível; (2) aumenta as fontes do relatório, que
-   ficavam pequenas demais quando geradas/impressas pelo celular; (3) mostra
-   o letreiro da empresa (.print-letterhead) no topo da folha. */
 @media print {
   * {
     -webkit-print-color-adjust: exact !important;
@@ -3239,10 +3072,6 @@ a:focus-visible {
     letter-spacing: 0.08em;
   }
 
-  /* ALTERAÇÃO: "flex-wrap" no bloco pai + esse "flex-basis" fazem o
-     texto de obra/período cair pra uma linha de baixo (em vez de espremer
-     e quebrar a palavra) quando o PDF é gerado numa largura estreita
-     (celular). */
   .print-letterhead-meta {
     display: flex;
     flex-direction: column;

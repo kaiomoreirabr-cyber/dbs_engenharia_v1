@@ -3,11 +3,6 @@ import { Link } from "react-router-dom";
 import { LogIn } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-// ALTERAÇÃO: página nova — tela de login. Reaproveita as mesmas classes de
-// formulário do resto do app (.form-card, .field, .primary-button) pra ficar
-// visualmente igual, só que dentro de um cartão centralizado em tela cheia
-// (.auth-shell/.auth-card), sem o cabeçalho nem a navegação — quem não está
-// logado não deve ver nada do conteúdo do app.
 export default function LoginPage() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
@@ -23,9 +18,6 @@ export default function LoginPage() {
     setSubmitting(false);
 
     if (signInError) {
-      // ALTERAÇÃO: o Supabase devolve "Invalid login credentials" em inglês
-      // pra qualquer combinação errada (não diferencia e-mail inexistente de
-      // senha errada, de propósito, por segurança) — traduzimos aqui.
       setError(
         signInError.message === "Invalid login credentials"
           ? "E-mail ou senha incorretos."

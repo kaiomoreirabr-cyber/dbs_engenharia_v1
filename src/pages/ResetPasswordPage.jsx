@@ -2,11 +2,6 @@ import { useState } from "react";
 import { KeyRound } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-// ALTERAÇÃO: página nova — só aparece quando a pessoa chega pelo link do
-// e-mail de recuperação (ver "isPasswordRecovery" em AuthContext.jsx e a
-// checagem em App.jsx). Pede a nova senha 2x (confirmação) e chama
-// updatePassword; ao salvar com sucesso, App.jsx solta a pessoa direto no
-// app (a sessão de recuperação já é uma sessão válida).
 export default function ResetPasswordPage() {
   const { updatePassword } = useAuth();
   const [password, setPassword] = useState("");

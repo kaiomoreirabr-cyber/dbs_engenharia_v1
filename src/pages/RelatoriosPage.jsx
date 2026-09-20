@@ -16,11 +16,6 @@ import {
 } from "../lib/dateUtils";
 import { formatCurrency } from "../lib/format";
 
-// ALTERAÇÃO: arquivo novo — substitui components/ReportPanel.jsx. Antes o
-// relatório só aparecia depois de clicar em "Gerar relatório de pagamento"
-// (um botão + rolar a tela até ele). Como agora é uma página própria
-// ("/relatorios"), o relatório do período atual já aparece assim que o
-// usuário entra na aba — um toque a menos no celular.
 export default function RelatoriosPage() {
   const {
     activeProject,
@@ -100,9 +95,6 @@ export default function RelatoriosPage() {
         <p className="empty-box">Cadastre funcionários nesta obra para gerar o relatório.</p>
       ) : (
         <section className="panel report-panel" aria-live="polite">
-          {/* ALTERAÇÃO: bloco novo — só aparece no PDF/impressão (ver
-              .print-letterhead no index.css). Coloca o nome da empresa no
-              relatório gerado, que antes saía sem nenhuma marca. */}
           <div className="print-letterhead" aria-hidden="true">
             <div className="print-letterhead-brand">
               <img src="/logo-dbs.png" alt="" className="print-letterhead-mark" />
@@ -139,9 +131,6 @@ export default function RelatoriosPage() {
             </div>
             <div className="report-head-actions">
               <span className="count-badge">{activeProject.name}</span>
-              {/* ALTERAÇÃO: era um botão só com o ícone de impressora
-                  (.icon-action) — trocado pelo botão vermelho completo, no
-                  estilo enviado como referência. */}
               <button
                 type="button"
                 className="print-report-button"
@@ -155,9 +144,6 @@ export default function RelatoriosPage() {
             </div>
           </div>
 
-          {/* ALTERAÇÃO: bloco novo — card de destaque com o total somado de
-              todos os funcionários do período, igual ao "TOTAL CONSOLIDADO"
-              que aparecia na sua captura de tela. */}
           <div className="total-consolidado-card">
             <span className="total-consolidado-label">
               Total consolidado do período

@@ -1,6 +1,4 @@
 import { supabase, useMockData } from "./supabaseClient";
-// ALTERAÇÃO: importa normalizeClosingPeriod para garantir que só gravamos
-// 'semanal' ou 'quinzenal' no banco, mesmo que algo inesperado chegue aqui.
 import { DAY_KEYS, normalizeClosingPeriod } from "./dateUtils";
 
 const createId = () =>

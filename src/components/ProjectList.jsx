@@ -3,8 +3,6 @@ import { Building2, Pencil } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import ConfirmButton from "./ConfirmButton";
 import EditProjectModal from "./EditProjectModal";
-// ALTERAÇÃO: importa CLOSING_PERIODS e normalizeClosingPeriod para mostrar,
-// em cada linha da lista, se a obra é semanal ou quinzenal.
 import { CLOSING_PERIODS, normalizeClosingPeriod } from "../lib/dateUtils";
 
 export default function ProjectList() {

@@ -31,11 +31,6 @@ function formatReportWeekRange(weekStart, reportStartDate, reportEndDate) {
   return `${format(start)} a ${format(end)}`;
 }
 
-// ALTERAÇÃO: arquivo novo — substitui AttendanceTable.jsx (que era uma
-// tabela larga com 6 ou 12 colunas de dia lado a lado). No celular, uma
-// tabela assim obriga a rolar pros lados o tempo todo. Aqui a marcação vira
-// uma LISTA vertical de funcionários para UM dia por vez, e o dia é trocado
-// por abas (SEG TER QUA...) — o padrão que já aparecia nas suas telas.
 export default function ChamadaPage() {
   const {
     activeProject,
@@ -55,14 +50,9 @@ export default function ChamadaPage() {
   } = useApp();
   const { showError } = useToast();
 
-  // Qual semana DENTRO do período está sendo mostrada (0 = primeira). Só
-  // importa no modo quinzenal, que tem 2 semanas; no semanal é sempre 0.
   const [weekIndex, setWeekIndex] = useState(0);
-  // Qual dia (seg..sáb) está selecionado. Começa já no dia de hoje.
   const [day, setDay] = useState(getTodayDayKey);
 
-  // Se o período mudar (navegou, ou a obra trocou de quinzenal->semanal) e
-  // o índice de semana escolhido não existir mais, volta pra semana 1.
   useEffect(() => {
     setWeekIndex((current) => (current > reportWeekStarts.length - 1 ? 0 : current));
   }, [reportWeekStarts]);
@@ -171,8 +161,6 @@ export default function ChamadaPage() {
             </button>
           </div>
 
-          {/* ALTERAÇÃO: bloco só aparece em obras quinzenais — escolhe qual
-              das 2 semanas do período as abas de dia (abaixo) vão mostrar. */}
           {reportWeekStarts.length > 1 && (
             <div className="week-in-period-toggle" role="tablist" aria-label="Semana do período">
               {reportWeekStarts.map((weekStart, index) => (
