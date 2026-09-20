@@ -121,19 +121,17 @@ function AuthenticatedApp() {
               fade/slide, em vez de trocar a tela seca. Ver
               components/PageTransition.jsx. */}
           <Route element={<PageTransition />}>
-            {/* ALTERAÇÃO: raiz "/" redireciona para "/chamada", a tela que o
-                usuário mais usa no dia a dia (marcar presença). */}
-            <Route path="/" element={<Navigate to="/chamada" replace />} />
+            {/* A entrada do sistema começa pela seleção de obras. */}
+            <Route path="/" element={<Navigate to="/obras" replace />} />
             <Route path="/obras" element={<ObrasPage />} />
             <Route path="/chamada" element={<ChamadaPage />} />
             <Route path="/equipe" element={<EquipePage />} />
             <Route path="/gastos" element={<GastosPage />} />
             <Route path="/relatorios" element={<RelatoriosPage />} />
             <Route path="/tema" element={<TemaPage />} />
-            {/* ALTERAÇÃO: já logado, "/login" e qualquer rota desconhecida
-                caem na Chamada em vez de mostrar a tela de login de novo. */}
-            <Route path="/login" element={<Navigate to="/chamada" replace />} />
-            <Route path="*" element={<Navigate to="/chamada" replace />} />
+            {/* Já logado, "/login" e qualquer rota desconhecida voltam para Obras. */}
+            <Route path="/login" element={<Navigate to="/obras" replace />} />
+            <Route path="*" element={<Navigate to="/obras" replace />} />
           </Route>
         </Routes>
       </main>
