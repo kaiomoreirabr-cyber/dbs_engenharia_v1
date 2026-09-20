@@ -120,10 +120,25 @@ drop policy if exists "project_expenses_all" on project_expenses;
 create policy "project_expenses_all" on project_expenses for all
   using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
--- ========== REALTIME ==========
--- Habilita atualização em tempo real (usada pelo front-end para refletir mudanças
--- feitas em outro dispositivo/aba automaticamente).
-alter publication supabase_realtime add table projects;
-alter publication supabase_realtime add table employees;
-alter publication supabase_realtime add table attendance_records;
-alter publication supabase_realtime add table project_expenses;
+do $$
+declare
+  table_name text;
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    foreach table_name in array array['projects', 'employees', 'attendance_records', 'project_expenses']
+    loop
+      if not exists (
+        select 1
+        from pg_publication_rel publication_table
+        join pg_publication publication on publication.oid = publication_table.prpubid
+        join pg_class relation on relation.oid = publication_table.prrelid
+        join pg_namespace namespace on namespace.oid = relation.relnamespace
+        where publication.pubname = 'supabase_realtime'
+          and namespace.nspname = 'public'
+          and relation.relname = table_name
+      ) then
+        execute format('alter publication supabase_realtime add table public.%I', table_name);
+      end if;
+    end loop;
+  end if;
+end $$;
