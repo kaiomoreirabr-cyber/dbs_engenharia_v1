@@ -1,25 +1,14 @@
--- Controle de Frequência de Obras — schema do banco (Supabase / Postgres)
--- Execute este arquivo no SQL Editor do seu projeto Supabase.
-
 create extension if not exists "pgcrypto";
 
--- ========== OBRAS ==========
 create table if not exists projects (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  -- ALTERAÇÃO: nova coluna "closing_period" define o período de fechamento
-  -- (pagamento) da obra. 'semanal' fecha a cada 1 semana (6 dias, seg-sáb);
-  -- 'quinzenal' fecha a cada 2 semanas (12 dias). Por padrão, novas obras
-  -- nascem como 'quinzenal', que é o modo de pagamento mais usado na empresa.
   closing_period text not null default 'quinzenal'
     check (closing_period in ('semanal', 'quinzenal')),
   created_at timestamptz not null default now(),
   constraint projects_name_unique unique (name)
 );
 
--- ALTERAÇÃO: migração para bancos já existentes (criados antes desta mudança).
--- Se a tabela "projects" já existir sem a coluna "closing_period", este bloco
--- adiciona a coluna sem apagar nada. É seguro rodar mais de uma vez.
 alter table projects
   add column if not exists closing_period text not null default 'quinzenal';
 
@@ -34,7 +23,6 @@ begin
   end if;
 end $$;
 
--- ========== FUNCIONÁRIOS ==========
 create table if not exists employees (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects (id) on delete cascade,
@@ -47,14 +35,9 @@ create table if not exists employees (
 
 create index if not exists employees_project_id_idx on employees (project_id);
 
--- Evita funcionários com o mesmo nome duplicado na mesma obra
 create unique index if not exists employees_unique_name_per_project
   on employees (project_id, lower(name));
 
--- ========== FREQUÊNCIA (CHAMADA) ==========
--- Cada linha representa a marcação de um funcionário em um dia de uma semana específica.
--- week_start é sempre a segunda-feira (ISO) da semana em questão, o que permite
--- consultar/editar semanas passadas sem perder o histórico.
 create table if not exists attendance_records (
   id uuid primary key default gen_random_uuid(),
   employee_id uuid not null references employees (id) on delete cascade,
@@ -68,8 +51,6 @@ create table if not exists attendance_records (
 create index if not exists attendance_week_idx on attendance_records (week_start);
 create index if not exists attendance_employee_idx on attendance_records (employee_id);
 
--- ========== GASTOS POR OBRA ==========
--- Cada linha representa um material ou despesa vinculada a uma obra.
 create table if not exists project_expenses (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references projects (id) on delete cascade,
@@ -88,17 +69,9 @@ create table if not exists project_expenses (
 create index if not exists project_expenses_project_idx on project_expenses (project_id);
 create index if not exists project_expenses_date_idx on project_expenses (spent_at);
 
--- Migração segura para bancos que já tinham a tabela de gastos.
 alter table project_expenses
   add column if not exists is_settled boolean not null default false;
 
--- ========== RLS ==========
--- ALTERAÇÃO: antes essas políticas liberavam acesso total pra quem tivesse
--- a chave anon (uso interno, sem login). Agora que o app tem tela de login
--- (Supabase Auth), exigimos "authenticated" — só entra quem estiver logado
--- com um usuário criado em Authentication > Users. Rodar este arquivo de
--- novo num projeto que já tinha o schema antigo é seguro: os "drop policy"
--- removem a política antiga antes de criar a nova.
 alter table projects enable row level security;
 alter table employees enable row level security;
 alter table attendance_records enable row level security;
