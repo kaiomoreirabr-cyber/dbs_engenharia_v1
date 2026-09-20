@@ -21,6 +21,7 @@ import TemaPage from "./pages/TemaPage";
 export default function App() {
   const { session, authLoading, isPasswordRecovery } = useAuth();
 
+  // Primeiro resolvemos a sessão; só depois o restante do app é montado.
   if (!isSupabaseConfigured && !useMockData) {
     return (
       <div className="app-shell">
@@ -96,6 +97,7 @@ function AuthenticatedApp() {
         <div className="scroll-top-sentinel" aria-hidden="true" />
         <Routes>
           <Route element={<PageTransition />}>
+            {/* Obras é a porta de entrada do sistema. */}
             <Route path="/" element={<Navigate to="/obras" replace />} />
             <Route path="/obras" element={<ObrasPage />} />
             <Route path="/chamada" element={<ChamadaPage />} />

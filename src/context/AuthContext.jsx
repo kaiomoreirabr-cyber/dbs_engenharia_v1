@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
+    // A sessão temporária de recuperação não libera o app antes da nova senha.
     if (useMockData) {
       setSession({ user: { email: "demo@local.test" } });
       setAuthLoading(false);

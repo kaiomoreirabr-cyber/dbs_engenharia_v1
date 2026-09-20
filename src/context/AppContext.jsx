@@ -28,6 +28,7 @@ const AppContext = createContext(null);
 const ATTENDANCE_CYCLE = ["absent", "full", "half"];
 
 function attendanceKey(employeeId, weekStart, day) {
+  // A semana faz parte da chave porque uma quinzena exibe duas iguais.
   return `${employeeId}::${weekStart}::${day}`;
 }
 
@@ -62,6 +63,7 @@ export function AppProvider({ children }) {
 
   const closingPeriod = normalizeClosingPeriod(activeProject?.closing_period);
 
+  // Cada fechamento pode reunir uma ou duas semanas de chamada.
   const periodWeekStarts = useMemo(
     () => getPeriodWeekStarts(periodStart, closingPeriod),
     [periodStart, closingPeriod]
@@ -73,6 +75,7 @@ export function AppProvider({ children }) {
   );
 
   useEffect(() => {
+    // Quando a obra muda, alinhamos o período ao calendário dela.
     const normalizedStart = normalizePeriodStart(reportStartDate);
     const periodEnd = addWorkingDays(normalizedStart, closingPeriod === "semanal" ? 6 : 12);
     if (reportStartDate !== normalizedStart) setReportStartDate(normalizedStart);
@@ -81,6 +84,7 @@ export function AppProvider({ children }) {
   }, [activeProjectId, closingPeriod]);
 
   useEffect(() => {
+    // A carga inicial traz as três coleções usadas pelas telas principais.
     if (!isSupabaseConfigured && !useMockData) {
       setLoadError(
         "Supabase não configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env e reinicie o app."
@@ -139,6 +143,7 @@ export function AppProvider({ children }) {
   }, [activeProjectId]);
 
   useEffect(() => {
+    // Mantém a chamada atualizada quando outra sessão altera o banco.
     if (!isSupabaseConfigured || useMockData) return undefined;
 
     const channel = supabase

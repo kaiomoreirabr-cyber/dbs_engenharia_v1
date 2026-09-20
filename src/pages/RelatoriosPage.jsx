@@ -37,6 +37,7 @@ export default function RelatoriosPage() {
   }, [reportStartDate, reportEndDate]);
 
   useEffect(() => {
+    // O relatório só consulta as semanas do período atualmente selecionado.
     if (!activeProject || !activeEmployees.length || !startDate || !endDate || startDate > endDate) {
       setRows([]);
       setReportLoading(false);
