@@ -16,6 +16,8 @@ tempo real), pronta  para o  deploy na **Vercel**.
 - Sincronização em tempo real entre dispositivos/abas (Supabase Realtime)
 - Validações completas, mensagens de sucesso/erro, estados de carregamento
 - Acessível (labels, aria-label, foco por teclado, contraste) e responsivo (mobile-first)
+-só sucesso kakakakk
+
 
 ## 1. Configurar o banco (Supabase)
 

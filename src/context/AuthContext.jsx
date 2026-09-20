@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
+import { supabase, isSupabaseConfigured, useMockData } from "../lib/supabaseClient";
 
 const AuthContext = createContext(null);
 
@@ -18,6 +18,12 @@ export function AuthProvider({ children }) {
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
+    if (useMockData) {
+      setSession({ user: { email: "demo@local.test" } });
+      setAuthLoading(false);
+      return undefined;
+    }
+
     if (!isSupabaseConfigured) {
       setAuthLoading(false);
       return undefined;
@@ -42,6 +48,11 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signIn = useCallback(async (email, password) => {
+    if (useMockData) {
+      setSession({ user: { email: email || "demo@local.test" } });
+      return { error: null };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   }, []);
@@ -51,18 +62,31 @@ export function AuthProvider({ children }) {
   // nada no código). Só o link chega no e-mail; quem preenche a nova senha
   // é a tela ResetPasswordPage.jsx.
   const sendPasswordReset = useCallback(async (email) => {
+    if (useMockData) {
+      return { error: null };
+    }
+
     const redirectTo = `${window.location.origin}/redefinir-senha`;
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
     return { error };
   }, []);
 
   const updatePassword = useCallback(async (password) => {
+    if (useMockData) {
+      setIsPasswordRecovery(false);
+      return { error: null };
+    }
+
     const { error } = await supabase.auth.updateUser({ password });
     if (!error) setIsPasswordRecovery(false);
     return { error };
   }, []);
 
   const signOut = useCallback(async () => {
+    if (useMockData) {
+      setSession(null);
+      return;
+    }
     await supabase.auth.signOut();
   }, []);
 

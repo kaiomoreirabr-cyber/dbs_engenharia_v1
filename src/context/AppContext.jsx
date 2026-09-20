@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
+import { supabase, isSupabaseConfigured, useMockData } from "../lib/supabaseClient";
 import * as api from "../lib/api";
 import {
   getWeekStart,
@@ -42,6 +42,7 @@ export function AppProvider({ children }) {
 
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
@@ -59,6 +60,7 @@ export function AppProvider({ children }) {
 
   const [savingProject, setSavingProject] = useState(false);
   const [savingEmployee, setSavingEmployee] = useState(false);
+  const [savingExpense, setSavingExpense] = useState(false);
   const [reportVisible, setReportVisible] = useState(false);
 
   const hasHydratedActiveProject = useRef(false);
@@ -101,7 +103,7 @@ export function AppProvider({ children }) {
 
   // ---------- Carga inicial ----------
   useEffect(() => {
-    if (!isSupabaseConfigured) {
+    if (!isSupabaseConfigured && !useMockData) {
       setLoadError(
         "Supabase não configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env e reinicie o app."
       );
@@ -109,15 +111,31 @@ export function AppProvider({ children }) {
       return;
     }
 
-    (async () => {
-      const [{ data: projectRows, error: projectError }, { data: employeeRows, error: employeeError }] =
-        await Promise.all([api.fetchProjects(), api.fetchEmployees()]);
+    if (useMockData) {
+      setProjects(api.getMockProjects());
+      setEmployees(api.getMockEmployees());
+      setExpenses(api.getMockExpenses());
+      setInitialLoading(false);
+      return;
+    }
 
-      if (projectError || employeeError) {
+    (async () => {
+      const [
+        { data: projectRows, error: projectError },
+        { data: employeeRows, error: employeeError },
+        { data: expenseRows, error: expenseError },
+      ] = await Promise.all([
+        api.fetchProjects(),
+        api.fetchEmployees(),
+        api.fetchProjectExpenses(),
+      ]);
+
+      if (projectError || employeeError || expenseError) {
         setLoadError("Não foi possível carregar os dados. Verifique sua conexão e tente novamente.");
       } else {
         setProjects(projectRows || []);
         setEmployees(employeeRows || []);
+        setExpenses(expenseRows || []);
       }
 
       setInitialLoading(false);
@@ -147,7 +165,7 @@ export function AppProvider({ children }) {
 
   // ---------- Realtime ----------
   useEffect(() => {
-    if (!isSupabaseConfigured) return undefined;
+    if (!isSupabaseConfigured || useMockData) return undefined;
 
     const channel = supabase
       .channel("obra-frequencia-sync")
@@ -156,6 +174,9 @@ export function AppProvider({ children }) {
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "employees" }, (payload) => {
         setEmployees((current) => applyRealtimeChange(current, payload));
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "project_expenses" }, (payload) => {
+        setExpenses((current) => applyRealtimeChange(current, payload));
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "attendance_records" }, (payload) => {
         const row = payload.new?.week_start ? payload.new : payload.old;
@@ -192,7 +213,7 @@ export function AppProvider({ children }) {
 
   // ---------- Frequência: carregar todas as semanas do período ----------
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured && !useMockData) return;
 
     let cancelled = false;
     setAttendanceLoading(true);
@@ -366,6 +387,98 @@ export function AppProvider({ children }) {
     [showError, showSuccess]
   );
 
+  // ---------- Gastos por obra ----------
+  const addExpense = useCallback(
+    async (payload) => {
+      if (!payload.projectId) {
+        showError("Selecione uma obra antes de registrar o gasto.");
+        return { ok: false };
+      }
+
+      setSavingExpense(true);
+      const { data, error } = await api.createProjectExpense(payload);
+      setSavingExpense(false);
+
+      if (error) {
+        showError("Não foi possível salvar o gasto. Tente novamente.");
+        return { ok: false };
+      }
+
+      setExpenses((current) => upsertById(current, data));
+      setActiveProjectId(payload.projectId);
+      showSuccess(`Gasto "${data.description}" salvo com sucesso.`);
+      return { ok: true, expense: data };
+    },
+    [showError, showSuccess]
+  );
+
+  const editExpense = useCallback(
+    async (id, payload) => {
+      if (!payload.projectId) {
+        showError("Selecione uma obra antes de editar o gasto.");
+        return { ok: false };
+      }
+
+      setSavingExpense(true);
+      const { data, error } = await api.updateProjectExpense(id, payload);
+      setSavingExpense(false);
+
+      if (error) {
+        showError("Não foi possível atualizar o gasto. Tente novamente.");
+        return { ok: false };
+      }
+
+      setExpenses((current) => upsertById(current, data));
+      showSuccess("Gasto atualizado com sucesso.");
+      return { ok: true };
+    },
+    [showError, showSuccess]
+  );
+
+  const removeExpense = useCallback(
+    async (id) => {
+      const { error } = await api.deleteProjectExpense(id);
+      if (error) {
+        showError("Não foi possível excluir este gasto. Tente novamente.");
+        return { ok: false };
+      }
+
+      setExpenses((current) => current.filter((expense) => expense.id !== id));
+      showSuccess("Gasto removido.");
+      return { ok: true };
+    },
+    [showError, showSuccess]
+  );
+
+  const toggleExpenseSettled = useCallback(
+    async (id) => {
+      const expense = expenses.find((item) => item.id === id);
+      if (!expense) return { ok: false };
+
+      const { data, error } = await api.updateProjectExpense(id, {
+        projectId: expense.project_id,
+        description: expense.description,
+        category: expense.category,
+        quantity: expense.quantity,
+        unitValue: expense.unit_price,
+        total: expense.total,
+        spentAt: expense.spent_at,
+        notes: expense.notes,
+        isSettled: !expense.is_settled,
+      });
+
+      if (error) {
+        showError("Não foi possível atualizar a baixa deste gasto.");
+        return { ok: false };
+      }
+
+      setExpenses((current) => upsertById(current, data));
+      showSuccess(data.is_settled ? "Gasto fechado." : "Gasto aberto.");
+      return { ok: true, expense: data };
+    },
+    [expenses, showError, showSuccess]
+  );
+
   // ---------- Frequência ----------
   // ALTERAÇÃO: toggleAttendance agora recebe também "weekStart" (a semana
   // específica daquela coluna), já que um período quinzenal mostra colunas
@@ -446,6 +559,18 @@ export function AppProvider({ children }) {
       .filter((employee) => employee.project_id === activeProjectId)
       .sort((left, right) => left.name.localeCompare(right.name, "pt-BR", { sensitivity: "base" })),
     [employees, activeProjectId]
+  );
+
+  const projectExpenses = useMemo(
+    () => expenses
+      .filter((expense) => expense.project_id === activeProjectId)
+      .sort((left, right) => new Date(right.spent_at) - new Date(left.spent_at)),
+    [expenses, activeProjectId]
+  );
+
+  const projectExpenseTotal = useMemo(
+    () => projectExpenses.reduce((sum, expense) => sum + Number(expense.total || 0), 0),
+    [projectExpenses]
   );
 
   // ALTERAÇÃO: getAttendanceStatus e isCellPending agora recebem "weekStart"
@@ -544,12 +669,19 @@ export function AppProvider({ children }) {
     goToCurrentPeriod,
     savingProject,
     savingEmployee,
+    savingExpense,
     addProject,
     editProject,
     removeProject,
     addEmployee,
     editEmployee,
     removeEmployee,
+    addExpense,
+    editExpense,
+    removeExpense,
+    toggleExpenseSettled,
+    projectExpenses,
+    projectExpenseTotal,
     toggleAttendance,
     getAttendanceStatus,
     isCellPending,

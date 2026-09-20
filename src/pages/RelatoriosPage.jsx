@@ -169,7 +169,7 @@ export default function RelatoriosPage() {
             <span>Funcionário · função</span>
             <span className="report-status-full">Diárias completas</span>
             <span className="report-status-half">Meias diárias</span>
-            <span className="report-status-absent">Ausente</span>
+            <span className="report-status-absent">Ausentes</span>
             <span>A receber</span>
             <span>Chave Pix</span>
           </div>
@@ -364,7 +364,7 @@ function ReportRow({ employee, full, half, absent, total }) {
       </strong>
       <span className="report-status-full" data-label="Diárias completas">{full}</span>
       <span className="report-status-half" data-label="Meias diárias">{half}</span>
-      <span className="report-status-absent" data-label="Ausente">{absent}</span>
+      <span className="report-status-absent" data-label="Ausentes">{absent}</span>
       <span data-label="A receber" className="report-total">
         {formatCurrency(total)}
       </span>

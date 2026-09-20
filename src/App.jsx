@@ -1,11 +1,12 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { AppProvider, useApp } from "./context/AppContext";
-import { isSupabaseConfigured } from "./lib/supabaseClient";
+import { isSupabaseConfigured, useMockData } from "./lib/supabaseClient";
 import AppHeader from "./components/AppHeader";
 import BottomNav from "./components/BottomNav";
 import PageTransition from "./components/PageTransition";
 import ToastStack from "./components/ToastStack";
+import BackToTop from "./components/BackToTop";
 import { LoadingScreen, ErrorScreen } from "./components/StatusScreen";
 import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -13,6 +14,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ObrasPage from "./pages/ObrasPage";
 import ChamadaPage from "./pages/ChamadaPage";
 import EquipePage from "./pages/EquipePage";
+import GastosPage from "./pages/GastosPage";
 import RelatoriosPage from "./pages/RelatoriosPage";
 import TemaPage from "./pages/TemaPage";
 
@@ -26,7 +28,7 @@ export default function App() {
   // Sem VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY não tem como autenticar
   // ninguém — mostra o mesmo aviso de configuração de antes, em vez de uma
   // tela de login que nunca vai funcionar.
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured && !useMockData) {
     return (
       <div className="app-shell">
         <ErrorScreen message="Supabase não configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env e reinicie o app." />
@@ -111,6 +113,7 @@ function AuthenticatedApp() {
           components/AppHeader.jsx. Fica visível em qualquer tela. */}
       <AppHeader />
       <main className="app-main">
+        <div className="scroll-top-sentinel" aria-hidden="true" />
         <Routes>
           {/* ALTERAÇÃO: PageTransition é usado como rota "layout" (elemento
               pai) — ela chama useOutlet() por dentro para pegar a página
@@ -124,6 +127,7 @@ function AuthenticatedApp() {
             <Route path="/obras" element={<ObrasPage />} />
             <Route path="/chamada" element={<ChamadaPage />} />
             <Route path="/equipe" element={<EquipePage />} />
+            <Route path="/gastos" element={<GastosPage />} />
             <Route path="/relatorios" element={<RelatoriosPage />} />
             <Route path="/tema" element={<TemaPage />} />
             {/* ALTERAÇÃO: já logado, "/login" e qualquer rota desconhecida
@@ -135,6 +139,7 @@ function AuthenticatedApp() {
       </main>
 
       <BottomNav />
+      <BackToTop />
       <ToastStack />
     </div>
   );

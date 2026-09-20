@@ -68,6 +68,30 @@ create table if not exists attendance_records (
 create index if not exists attendance_week_idx on attendance_records (week_start);
 create index if not exists attendance_employee_idx on attendance_records (employee_id);
 
+-- ========== GASTOS POR OBRA ==========
+-- Cada linha representa um material ou despesa vinculada a uma obra.
+create table if not exists project_expenses (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references projects (id) on delete cascade,
+  description text not null,
+  category text not null,
+  quantity numeric(12, 2) not null check (quantity > 0),
+  unit_price numeric(12, 2) not null check (unit_price > 0),
+  total numeric(12, 2) not null check (total >= 0),
+  spent_at date not null,
+  notes text,
+  is_settled boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists project_expenses_project_idx on project_expenses (project_id);
+create index if not exists project_expenses_date_idx on project_expenses (spent_at);
+
+-- Migração segura para bancos que já tinham a tabela de gastos.
+alter table project_expenses
+  add column if not exists is_settled boolean not null default false;
+
 -- ========== RLS ==========
 -- ALTERAÇÃO: antes essas políticas liberavam acesso total pra quem tivesse
 -- a chave anon (uso interno, sem login). Agora que o app tem tela de login
@@ -78,6 +102,7 @@ create index if not exists attendance_employee_idx on attendance_records (employ
 alter table projects enable row level security;
 alter table employees enable row level security;
 alter table attendance_records enable row level security;
+alter table project_expenses enable row level security;
 
 drop policy if exists "projects_all" on projects;
 create policy "projects_all" on projects for all
@@ -91,9 +116,14 @@ drop policy if exists "attendance_all" on attendance_records;
 create policy "attendance_all" on attendance_records for all
   using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
+drop policy if exists "project_expenses_all" on project_expenses;
+create policy "project_expenses_all" on project_expenses for all
+  using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
 -- ========== REALTIME ==========
 -- Habilita atualização em tempo real (usada pelo front-end para refletir mudanças
 -- feitas em outro dispositivo/aba automaticamente).
 alter publication supabase_realtime add table projects;
 alter publication supabase_realtime add table employees;
 alter publication supabase_realtime add table attendance_records;
+alter publication supabase_realtime add table project_expenses;

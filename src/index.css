@@ -423,6 +423,12 @@ button:active:not(:disabled) {
   padding-bottom: calc(84px + env(safe-area-inset-bottom));
 }
 
+.scroll-top-sentinel {
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
 @media (min-width: 900px) {
   .app-main {
     padding-bottom: 0;
@@ -685,6 +691,51 @@ button:active:not(:disabled) {
   color: var(--red);
 }
 
+.back-to-top {
+  position: fixed;
+  right: 18px;
+  bottom: calc(78px + env(safe-area-inset-bottom));
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--red);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease, background-color 0.2s ease;
+}
+
+.back-to-top.is-visible {
+  opacity: 0.62;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.back-to-top:hover {
+  opacity: 1;
+  background: var(--tint-danger-bg);
+}
+
+.back-to-top:focus-visible,
+.back-to-top:active {
+  opacity: 1;
+}
+
+@media (min-width: 900px) {
+  .back-to-top {
+    right: 28px;
+    bottom: 28px;
+  }
+}
+
 /* ALTERAÇÃO: era só "opacity: 0.7" — junto com o flash azul do navegador
    (agora removido, ver "-webkit-tap-highlight-color" no topo do arquivo)
    isso deixava o toque nos ícones bem sem graça/estranho. Agora o ícone
@@ -803,6 +854,11 @@ button:active:not(:disabled) {
   padding: 0.72rem 0.85rem;
   color: var(--ink);
   font: inherit;
+}
+
+.field-textarea {
+  resize: vertical;
+  min-height: 110px;
 }
 
 .field:focus-visible {
@@ -1096,6 +1152,244 @@ button:active:not(:disabled) {
   background: var(--tint-success-bg);
   color: var(--green);
   cursor: default;
+}
+
+.expense-cancel-button {
+  margin-top: 0;
+  width: 100%;
+}
+
+.expense-form-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.expense-form-actions .primary-button,
+.expense-form-actions .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+.expense-add-button {
+  margin-top: 0;
+  background: var(--green);
+}
+
+.expense-add-button:hover:not(:disabled) {
+  background: #05632f;
+}
+
+.expense-list-panel {
+  padding: 0 16px 16px;
+}
+
+.expense-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.expense-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.6fr) minmax(0, 0.8fr) minmax(0, 0.8fr) minmax(0, 0.7fr) minmax(0, 0.5fr);
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  padding: 12px 10px;
+}
+
+.expense-row strong,
+.expense-row span {
+  font-size: 0.83rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+
+.expense-row strong {
+  color: var(--ink);
+}
+
+.expense-total {
+  font-weight: 800;
+  color: var(--green);
+}
+
+.expense-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+.expense-actions .mini-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 34px;
+  min-width: 0;
+  flex: 1 1 0;
+  white-space: nowrap;
+}
+
+.expense-actions .mini-action.danger:hover:not(:disabled) {
+  border-color: var(--tint-danger-border);
+  background: var(--tint-danger-bg);
+  color: var(--tint-danger-text);
+}
+
+.expense-notes {
+  grid-column: 1 / -1;
+}
+
+.settle-action {
+  border-color: #238a55;
+  background: #e9f9ef;
+  color: #176b42;
+  font-weight: 800;
+}
+
+.settle-action.is-settled {
+  border-color: #ef4136;
+  background: #fff0ee;
+  color: #c52f28;
+}
+
+[data-theme="dark"] .settle-action {
+  border-color: #3ecf8e;
+  background: #193528;
+  color: #9ce9b8;
+}
+
+[data-theme="dark"] .settle-action.is-settled {
+  border-color: #ef4136;
+  background: #3a2027;
+  color: #ffb8bd;
+}
+
+.expense-print-total {
+  color: var(--green) !important;
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+}
+
+@media (max-width: 800px) {
+  .expense-summary {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .expense-summary .print-report-button {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .expense-list-panel {
+    padding: 0 12px 12px;
+  }
+
+  .expense-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+    padding: 14px 12px;
+  }
+
+  .expense-row > * {
+    min-width: 0;
+  }
+
+  .expense-row > *::before {
+    display: block;
+    width: fit-content;
+    margin-bottom: 5px;
+    content: attr(data-label);
+    border: 0;
+    padding-left: 0;
+    color: var(--red-dark);
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+    line-height: 1.25;
+    text-transform: uppercase;
+  }
+
+  .expense-row strong {
+    grid-column: 1 / -1;
+    font-size: 0.95rem;
+    padding-bottom: 2px;
+  }
+
+  .expense-row > span:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .expense-row > span:nth-child(6) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .expense-row > span:nth-child(3) {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .expense-row > span:nth-child(4) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .expense-row > span:nth-child(5) {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+
+  .expense-row > span:nth-child(7) {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+
+  .expense-row > span:nth-child(5)::before {
+    color: var(--green);
+  }
+
+  .expense-row > span:nth-child(5) {
+    font-weight: 800;
+    color: var(--green);
+  }
+
+  .expense-row .expense-actions {
+    grid-column: 1 / -1;
+    grid-row: 6;
+    align-self: stretch;
+    padding-top: 4px;
+  }
+
+  .expense-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .expense-actions .mini-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.35rem;
+    white-space: nowrap;
+  }
 }
 
 .icon-action {
@@ -1489,6 +1783,15 @@ a:focus-visible {
 }
 .summary-chip.tone-absent .chip-dot {
   background: var(--gray);
+}
+
+.expense-summary {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.expense-summary .print-report-button {
+  min-width: 0;
 }
 
 /* ---------- Navegação de período (Semana/Quinzena) ---------- */
@@ -2339,13 +2642,13 @@ a:focus-visible {
 .report-table-head .report-status-absent,
 .report-row .report-status-absent,
 .report-row .report-status-absent::before {
-  color: #6b7280;
+  color: #c62828;
 }
 
 [data-theme="dark"] .report-table-head .report-status-absent,
 [data-theme="dark"] .report-row .report-status-absent,
 [data-theme="dark"] .report-row .report-status-absent::before {
-  color: #c4c9d1;
+  color: #ff8f8f;
 }
 
 .report-list {
@@ -2456,6 +2759,29 @@ a:focus-visible {
 
   .pix-box {
     grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .pix-box::before {
+    display: block !important;
+    flex: 0 0 78px;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .pix-box .pix-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pix-box .copy-pix {
+    flex: 0 0 auto;
   }
 }
 
@@ -2774,6 +3100,11 @@ a:focus-visible {
    ficavam pequenas demais quando geradas/impressas pelo celular; (3) mostra
    o letreiro da empresa (.print-letterhead) no topo da folha. */
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   html,
   body,
   #root,
@@ -2965,6 +3296,8 @@ a:focus-visible {
     padding: 14px 0;
     break-inside: avoid;
     page-break-inside: avoid;
+    overflow: visible !important;
+    white-space: normal !important;
   }
 
   .report-list {
@@ -2975,27 +3308,40 @@ a:focus-visible {
 
   .report-row strong {
     font-size: 1.02rem;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .report-row > span,
+  .report-row > div {
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: normal !important;
   }
 
   .report-row > span::before,
   .report-row > div::before {
     font-size: 0.72rem;
     color: var(--muted);
+    overflow: visible !important;
   }
 
   .report-table-head span:nth-child(2),
   .report-status-full::before {
-    color: #168447;
+    color: #168447 !important;
   }
 
   .report-table-head span:nth-child(3),
   .report-status-half::before {
-    color: #a56a00;
+    color: #a56a00 !important;
   }
 
   .report-table-head span:nth-child(4),
-  .report-status-absent::before {
-    color: #6b7280;
+  .report-status-absent,
+  .report-status-absent::before,
+  .report-table-head .report-status-absent,
+  .report-row .report-status-absent {
+    color: #c62828 !important;
   }
 
   .report-total {
@@ -3006,5 +3352,159 @@ a:focus-visible {
     font-size: 0.95rem;
     white-space: normal;
     overflow: visible;
+  }
+
+  .report-row .pix-box {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .report-row .pix-box::before {
+    grid-column: 1;
+    margin: 0;
+    white-space: nowrap;
+    color: #4f4f4f;
+    font-size: 0.72rem;
+    font-weight: 900;
+  }
+
+  .report-row .pix-box .pix-value {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .expense-list-panel,
+  .expense-cancel-button,
+  .expense-add-button,
+  .form-card .primary-button,
+  .project-select,
+  .page-header,
+  .app-header,
+  .bottom-nav,
+  .summary-chip-row {
+    display: none !important;
+  }
+
+  .expense-list-panel {
+    display: block !important;
+    overflow: visible !important;
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+  }
+
+  .expense-print-letterhead {
+    display: flex !important;
+  }
+
+  .page > .form-card {
+    display: none !important;
+  }
+
+  .expense-list {
+    display: block;
+  }
+
+  .expense-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 18px;
+    margin: 0 0 16px;
+    padding: 16px 18px;
+    border: 1px solid #b9c2cc;
+    border-left: 5px solid var(--red);
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 3px 8px rgba(18, 18, 18, 0.08);
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .expense-row strong {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--red);
+    color: #121212;
+    font-size: 1.12rem;
+    font-weight: 900;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .expense-row strong::before {
+    display: block;
+    content: "Nome do produto";
+    color: #174a7e;
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .expense-row span {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    color: #262626;
+    font-size: 1.06rem;
+    font-weight: 800;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .expense-row strong,
+  .expense-row span {
+    color: #111111;
+    font-weight: 800;
+    text-shadow: none;
+  }
+
+  .expense-row strong {
+    font-size: 1.18rem;
+  }
+
+  .expense-row .expense-unit-price {
+    color: #c62828;
+  }
+
+  .expense-row .expense-unit-price::before {
+    color: #174a7e;
+  }
+
+  .expense-row .expense-actions,
+  .expense-row .expense-actions * {
+    display: none !important;
+  }
+
+  .expense-row.is-settled {
+    display: none !important;
+  }
+
+  .expense-row span::before {
+    display: block;
+    margin-bottom: 1px;
+    color: #174a7e;
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    line-height: 1.25;
+    text-transform: uppercase;
+  }
+
+  .expense-row > span:nth-child(2)::before { content: "Categoria"; }
+  .expense-row > span:nth-child(3)::before { content: "Quantidade"; }
+  .expense-row > span:nth-child(4)::before { content: "Valor unitário"; }
+  .expense-row > span:nth-child(5)::before { content: "Total"; }
+  .expense-row > span:nth-child(6)::before { content: "Data"; }
+  .expense-row > span:nth-child(5)::before { color: #168447; }
+
+  .expense-list-panel .report-table-head {
+    display: none;
   }
 }
