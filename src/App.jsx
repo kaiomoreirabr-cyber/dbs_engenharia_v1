@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { AppProvider, useApp } from "./context/AppContext";
@@ -20,6 +21,50 @@ import TemaPage from "./pages/TemaPage";
 
 export default function App() {
   const { session, authLoading, isPasswordRecovery } = useAuth();
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return undefined;
+
+    let isReloading = false;
+    const reloadWithNewVersion = () => {
+      if (isReloading) return;
+      isReloading = true;
+      window.location.reload();
+    };
+
+    const handleControllerChange = () => {
+      if (navigator.serviceWorker.controller) reloadWithNewVersion();
+    };
+
+    navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
+
+    let cancelled = false;
+    let activeRegistration;
+    const handleUpdateFound = () => {
+      const installingWorker = activeRegistration?.installing;
+      if (!installingWorker) return;
+
+      installingWorker.addEventListener("statechange", () => {
+        if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
+          reloadWithNewVersion();
+        }
+      });
+    };
+
+    navigator.serviceWorker.ready.then((registration) => {
+      if (cancelled) return;
+
+      activeRegistration = registration;
+      registration.addEventListener("updatefound", handleUpdateFound);
+      registration.update().catch(() => {});
+    });
+
+    return () => {
+      cancelled = true;
+      activeRegistration?.removeEventListener("updatefound", handleUpdateFound);
+      navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
+    };
+  }, []);
 
   // Primeiro resolvemos a sessão; só depois o restante do app é montado.
   if (!isSupabaseConfigured && !useMockData) {
