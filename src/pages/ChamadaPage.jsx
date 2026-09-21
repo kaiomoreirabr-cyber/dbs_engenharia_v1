@@ -53,6 +53,16 @@ export default function ChamadaPage() {
   const [day, setDay] = useState(getTodayDayKey);
 
   useEffect(() => {
+    const currentReportStart = getWeekStart();
+    const currentReportEnd = closingPeriod === "semanal"
+      ? getPeriodEnd(currentReportStart, closingPeriod)
+      : addWorkingDays(currentReportStart, 12);
+
+    setReportDateRange(currentReportStart, currentReportEnd);
+    setDay(getTodayDayKey());
+  }, [activeProject?.id, closingPeriod, setReportDateRange]);
+
+  useEffect(() => {
     const currentWeekIndex = reportWeekStarts.indexOf(getWeekStart());
     setWeekIndex((current) => {
       if (currentWeekIndex >= 0) return currentWeekIndex;

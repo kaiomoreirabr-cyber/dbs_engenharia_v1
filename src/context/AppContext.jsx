@@ -43,8 +43,8 @@ export function AppProvider({ children }) {
 
   const [activeProjectId, setActiveProjectId] = useState(null);
   const [periodStart, setPeriodStart] = useState(() => getWeekStart());
-  const [reportStartDate, setReportStartDate] = useState(() => addWeeks(getWeekStart(), -1));
-  const [reportEndDate, setReportEndDate] = useState(() => addWorkingDays(addWeeks(getWeekStart(), -1), 12));
+  const [reportStartDate, setReportStartDate] = useState(() => getWeekStart());
+  const [reportEndDate, setReportEndDate] = useState(() => addWorkingDays(getWeekStart(), 12));
   const [attendance, setAttendance] = useState(new Map());
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [pendingCells, setPendingCells] = useState(new Set());
