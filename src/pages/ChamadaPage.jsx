@@ -13,7 +13,6 @@ import {
   getTodayDayKey,
   addWorkingDays,
   getPeriodEnd,
-  addWeeks,
   isMonday,
 } from "../lib/dateUtils";
 import { formatCurrency, getInitials } from "../lib/format";
@@ -77,9 +76,7 @@ export default function ChamadaPage() {
   };
 
   const handleReturnToCurrentPeriod = () => {
-    const currentReportStart = closingPeriod === "semanal"
-      ? getWeekStart()
-      : addWeeks(getWeekStart(), -1);
+    const currentReportStart = getWeekStart();
     const currentReportEnd = closingPeriod === "semanal"
       ? getPeriodEnd(currentReportStart, closingPeriod)
       : addWorkingDays(currentReportStart, 12);
