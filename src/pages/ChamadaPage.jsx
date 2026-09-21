@@ -53,7 +53,11 @@ export default function ChamadaPage() {
   const [day, setDay] = useState(getTodayDayKey);
 
   useEffect(() => {
-    setWeekIndex((current) => (current > reportWeekStarts.length - 1 ? 0 : current));
+    const currentWeekIndex = reportWeekStarts.indexOf(getWeekStart());
+    setWeekIndex((current) => {
+      if (currentWeekIndex >= 0) return currentWeekIndex;
+      return current > reportWeekStarts.length - 1 ? 0 : current;
+    });
   }, [reportWeekStarts]);
 
   const currentWeekStart = reportWeekStarts[weekIndex] || reportWeekStarts[0];
