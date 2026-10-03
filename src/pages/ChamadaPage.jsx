@@ -41,6 +41,8 @@ export default function ChamadaPage() {
     firstFilledDay,
     reportWeekStarts,
     closingPeriod,
+    homePeriodStart,
+    setCustomPeriodStart,
     summary,
     reportStartDate,
     reportEndDate,
@@ -53,29 +55,26 @@ export default function ChamadaPage() {
   const [day, setDay] = useState(getTodayDayKey);
 
   useEffect(() => {
-    const currentReportStart = getWeekStart();
+    const currentReportStart = homePeriodStart || getWeekStart();
     const currentReportEnd = closingPeriod === "semanal"
       ? getPeriodEnd(currentReportStart, closingPeriod)
       : addWorkingDays(currentReportStart, 12);
 
     setReportDateRange(currentReportStart, currentReportEnd);
     setDay(getTodayDayKey());
-  }, [activeProject?.id, closingPeriod, setReportDateRange]);
+  }, [activeProject?.id, closingPeriod, homePeriodStart, setReportDateRange]);
 
   useEffect(() => {
     const currentWeekIndex = reportWeekStarts.indexOf(getWeekStart());
-    setWeekIndex((current) => {
-      if (currentWeekIndex >= 0) return currentWeekIndex;
-      return current > reportWeekStarts.length - 1 ? 0 : current;
-    });
+    if (currentWeekIndex >= 0) {
+      setWeekIndex(currentWeekIndex);
+    }
   }, [reportWeekStarts]);
 
   const currentWeekStart = reportWeekStarts[weekIndex] || reportWeekStarts[0];
   const periodLabel = closingPeriod === "quinzenal" ? "Quinzena" : "Semana";
   const currentWeek = getWeekStart();
-  const current = closingPeriod === "semanal"
-    ? reportStartDate === currentWeek
-    : reportStartDate <= currentWeek && currentWeek <= reportEndDate;
+  const current = reportStartDate === homePeriodStart;
 
   const handleReportStartChange = (event) => {
     const nextStartDate = event.target.value;
@@ -86,15 +85,19 @@ export default function ChamadaPage() {
     const nextEndDate = closingPeriod === "semanal"
       ? getPeriodEnd(nextStartDate, closingPeriod)
       : addWorkingDays(nextStartDate, 12);
+    setCustomPeriodStart(nextStartDate);
     setReportDateRange(nextStartDate, nextEndDate);
   };
 
   const handleReturnToCurrentPeriod = () => {
-    const currentReportStart = getWeekStart();
+    const currentReportStart = homePeriodStart || getWeekStart();
     const currentReportEnd = closingPeriod === "semanal"
       ? getPeriodEnd(currentReportStart, closingPeriod)
       : addWorkingDays(currentReportStart, 12);
-    const todayWeekIndex = reportWeekStarts.indexOf(getWeekStart());
+    const currentRangeWeekStarts = closingPeriod === "semanal"
+      ? [currentReportStart]
+      : [currentReportStart, addWorkingDays(currentReportStart, 7)];
+    const todayWeekIndex = currentRangeWeekStarts.indexOf(getWeekStart());
 
     setReportDateRange(currentReportStart, currentReportEnd);
     setWeekIndex(todayWeekIndex >= 0 ? todayWeekIndex : 0);

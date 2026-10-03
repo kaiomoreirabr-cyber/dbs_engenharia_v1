@@ -42,7 +42,18 @@ export function AppProvider({ children }) {
   const [loadError, setLoadError] = useState(null);
 
   const [activeProjectId, setActiveProjectId] = useState(null);
-  const [periodStart, setPeriodStart] = useState(() => getWeekStart());
+  const [homePeriodStart, setHomePeriodStart] = useState(() => {
+    try {
+      const saved = localStorage.getItem("chamada:periodStart");
+      if (saved && /^\d{4}-\d{2}-\d{2}$/.test(saved)) {
+        return normalizePeriodStart(saved);
+      }
+    } catch {
+      // The default below is used when local storage is unavailable.
+    }
+    return getWeekStart();
+  });
+  const [periodStart, setPeriodStart] = useState(homePeriodStart);
   const [reportStartDate, setReportStartDate] = useState(() => getWeekStart());
   const [reportEndDate, setReportEndDate] = useState(() => addWorkingDays(getWeekStart(), 12));
   const [attendance, setAttendance] = useState(new Map());
@@ -477,7 +488,22 @@ export function AppProvider({ children }) {
     () => setPeriodStart((current) => addPeriods(current, 1, closingPeriod)),
     [closingPeriod]
   );
-  const goToCurrentPeriod = useCallback(() => setPeriodStart(getWeekStart()), []);
+  const goToCurrentPeriod = useCallback(
+    () => setPeriodStart(homePeriodStart),
+    [homePeriodStart]
+  );
+
+  const setCustomPeriodStart = useCallback((iso) => {
+    if (!iso) return;
+    const normalizedStart = normalizePeriodStart(iso);
+    setHomePeriodStart(normalizedStart);
+    setPeriodStart(normalizedStart);
+    try {
+      localStorage.setItem("chamada:periodStart", normalizedStart);
+    } catch {
+      // Keep the selected date for this session when local storage is unavailable.
+    }
+  }, []);
 
   const setReportDateRange = useCallback((startDate, endDate) => {
     setReportStartDate(normalizePeriodStart(startDate));
@@ -590,6 +616,8 @@ export function AppProvider({ children }) {
     activeEmployees,
     setActiveProjectId,
     periodStart,
+    homePeriodStart,
+    setCustomPeriodStart,
     reportStartDate,
     reportEndDate,
     setReportDateRange,
