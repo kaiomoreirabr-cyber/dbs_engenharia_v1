@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, FileBarChart2, Copy, Check, Printer } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, FileBarChart2, Copy, Check, Share2 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useToast } from "../context/ToastContext";
 import PageHeader from "../components/PageHeader";
@@ -30,6 +30,30 @@ export default function RelatoriosPage() {
   const [endDate, setEndDate] = useState(reportEndDate);
   const [rows, setRows] = useState([]);
   const [reportLoading, setReportLoading] = useState(false);
+  const [sharingReport, setSharingReport] = useState(false);
+  const [reportPdfGenerator, setReportPdfGenerator] = useState(null);
+  const [reportLogoDataUrl, setReportLogoDataUrl] = useState(null);
+  const [reportPdfGeneratorFailed, setReportPdfGeneratorFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    import("../lib/reportPdf.js")
+      .then(async ({ createAttendanceReportPdf, loadAttendanceReportLogo }) => {
+        const logoDataUrl = await loadAttendanceReportLogo();
+        if (!cancelled) {
+          setReportPdfGenerator(() => createAttendanceReportPdf);
+          setReportLogoDataUrl(logoDataUrl);
+        }
+      })
+      .catch((error) => {
+        console.error("Não foi possível carregar o gerador de PDF do relatório.", error);
+        if (!cancelled) setReportPdfGeneratorFailed(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     setStartDate(reportStartDate);
@@ -84,6 +108,58 @@ export default function RelatoriosPage() {
 
   const totalConsolidado = rows.reduce((sum, row) => sum + row.total, 0);
   const reportReady = !reportLoading && rows.length === activeEmployees.length;
+  const shareButtonDisabled =
+    !reportReady ||
+    ((!reportPdfGenerator || !reportLogoDataUrl) && !reportPdfGeneratorFailed) ||
+    sharingReport;
+  const shareButtonLabel = reportLoading
+    ? "Atualizando..."
+    : sharingReport
+      ? "Preparando PDF..."
+      : (!reportPdfGenerator || !reportLogoDataUrl) && !reportPdfGeneratorFailed
+        ? "Preparando PDF..."
+        : "Compartilhar Relatório";
+
+  const handleShareReport = async () => {
+    if (!reportReady || sharingReport) return;
+
+    if (!reportPdfGenerator || !reportLogoDataUrl || !supportsPdfSharing()) {
+      const message = reportPdfGeneratorFailed
+        ? "A geração do PDF não ficou disponível. Abrindo a impressão do relatório."
+        : "O compartilhamento direto não está disponível. Abrindo a impressão do relatório.";
+      showError(message);
+      window.print();
+      return;
+    }
+
+    setSharingReport(true);
+    try {
+      const fileName = `relatorio-frequencia-${createFileSlug(activeProject.name)}-${startDate}-${endDate}.pdf`;
+      const pdfBlob = reportPdfGenerator({
+        projectName: activeProject.name,
+        closingPeriod: closingPeriod === "semanal" ? "semanal" : "quinzenal",
+        startDate,
+        endDate,
+        total: totalConsolidado,
+        rows,
+        logoDataUrl: reportLogoDataUrl,
+      });
+      const file = new File([pdfBlob], fileName, { type: "application/pdf" });
+      const shareRequest = navigator.share({
+        files: [file],
+        title: `Relatório de pagamento - ${activeProject.name}`,
+        text: `Fechamento de ${formatDisplayDate(startDate)} a ${formatDisplayDate(endDate)}`,
+      });
+      await shareRequest;
+    } catch (error) {
+      if (error?.name !== "AbortError") {
+        showError("Não foi possível compartilhar o PDF. Abrindo a impressão do relatório.");
+        window.print();
+      }
+    } finally {
+      setSharingReport(false);
+    }
+  };
 
   return (
     <div className="page">
@@ -135,12 +211,13 @@ export default function RelatoriosPage() {
               <button
                 type="button"
                 className="print-report-button"
-                onClick={() => window.print()}
-                disabled={!reportReady}
-                aria-disabled={!reportReady}
+                onClick={handleShareReport}
+                disabled={shareButtonDisabled}
+                aria-disabled={shareButtonDisabled}
+                aria-busy={sharingReport}
               >
-                <Printer size={16} />
-                {reportLoading ? "Atualizando..." : "Gerar Relatório"}
+                <Share2 size={14} />
+                {shareButtonLabel}
               </button>
             </div>
           </div>
@@ -182,6 +259,32 @@ export default function RelatoriosPage() {
       )}
     </div>
   );
+}
+
+function supportsPdfSharing() {
+  if (
+    typeof navigator.share !== "function" ||
+    typeof navigator.canShare !== "function" ||
+    typeof File === "undefined"
+  ) {
+    return false;
+  }
+
+  try {
+    const file = new File([], "relatorio.pdf", { type: "application/pdf" });
+    return navigator.canShare({ files: [file] });
+  } catch {
+    return false;
+  }
+}
+
+function createFileSlug(value) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function buildReportRows(employees, workingDates, records) {

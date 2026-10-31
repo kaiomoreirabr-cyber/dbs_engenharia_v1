@@ -2580,6 +2580,34 @@ a:focus-visible {
 }
 
 @media (max-width: 800px) {
+  .report-head-actions {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .report-head-actions .count-badge {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .report-head-actions .print-report-button {
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    gap: 5px;
+    border-width: 1px;
+    border-radius: 10px;
+    padding: 0.42rem 0.45rem;
+    font-size: 0.66rem;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+    text-align: center;
+  }
+
   .report-table-head {
     display: none;
   }

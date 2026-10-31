@@ -12,7 +12,8 @@ tempo real), pronta  para o  deploy na **Vercel**.
 - Chamada semanal com navegação entre semanas (histórico preservado)
 - Marcação de presença em 3 estados: ausente, diária completa, meia diária
 - Resumo em tempo real (completas / meias / ausências)
-- Relatório de pagamento com valor total por funcionário e cópia da chave Pix
+- Relatório de pagamento com valor total por funcionário, cópia da chave Pix e compartilhamento direto do PDF
+- Compartilhamento nativo do relatório no celular, com impressão como alternativa quando o navegador não aceita compartilhar arquivos
 - Sincronização em tempo real entre dispositivos/abas (Supabase Realtime)
 - Validações completas, mensagens de sucesso/erro, estados de carregamento
 - Acessível (labels, aria-label, foco por teclado, contraste) e responsivo (mobile-first)
