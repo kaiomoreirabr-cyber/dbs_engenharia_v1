@@ -2939,6 +2939,11 @@ a:focus-visible {
     print-color-adjust: exact !important;
   }
 
+  html {
+    color-scheme: light !important;
+    background: #fff !important;
+  }
+
   html,
   body,
   #root,
@@ -2949,6 +2954,8 @@ a:focus-visible {
     height: auto !important;
     min-height: 0 !important;
     overflow: visible !important;
+    color-scheme: light !important;
+    background: #fff !important;
   }
 
   body,
@@ -3016,6 +3023,7 @@ a:focus-visible {
     box-shadow: none;
     border: none;
     padding: 0;
+    background: #fff !important;
   }
 
   .print-letterhead {
